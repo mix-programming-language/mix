@@ -1,0 +1,282 @@
+<block> ::= <statement_list>
+
+<statement_list> ::= ""
+                   | <statement_list> <statement>
+
+; --------------------------------------------------------------------------- ;
+
+<statement> ::= <expression> ";"
+              | <assignment_statement>
+              | <variable_declaration_clause> ";"
+              | <selection_statement>
+              | <iteration_statement>
+              | <jump_statement>
+              | <import_statement>
+              | <export_statement>
+              | <compound_statement>
+              | <class_declaration>
+              | <function_definition>
+              | <interface_definition>
+              | <interface_impl_definition>
+
+<assignment_statement> ::= <variable> "=" <initializer> ";"
+                         | <variable> <assignment_operator> <expression> ";"
+
+<variable> ::= <id_expression>
+             | <postfix_expression> "[" <expression> "]"
+             | <postfix_expression> "." <identifier>
+             | "self" "." <identifier>
+
+<id_expression> ::= <identifier>
+                  | <nested_name_specifier> <identifier>
+
+<nested_name_specifier> ::= <identifier> "::"
+                          | <nested_name_specifier> <identifier> "::"
+
+<assignment_operator> ::= "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>="
+
+<variable_declaration_clause> ::= "var" <variable_declaration_with_optional_assignment_list>
+
+<variable_declaration_with_optional_assignment_list> ::= <variable_declaration_with_optional_assignment>
+                                                       | <variable_declaration_with_optional_assignment_list> "," <variable_declaration_with_optional_assignment>
+
+<variable_declaration_with_optional_assignment> ::= <identifier_and_type>
+                                                  | <identifier_and_type> "=" <initializer>
+                                                  | <identifier> "=" <initializer>
+
+<identifier_and_type> ::= <identifier> ":" <type_specifier>
+
+<initializer> ::= <expression>
+                | "{" <initializer_clause_list> "}"
+                | "{" <initializer_clause_list> "," "}"
+
+<initializer_clause_list> ::= <initializer_clause>
+                            | <initializer_clause_list> "," <initializer_clause>
+
+<initializer_clause> ::= <identifier> "=" <initializer>
+
+<selection_statement> ::= "if" <expression> <compound_statement>
+                        | "if" <expression> <compound_statement> "else" <compound_statement>
+
+<iteration_statement> ::= "while" <expression> <compound_statement>
+                        | "do" <compound_statement> "while" <expression> ";"
+                        | "for" <identifier> "in" <expression> <compound_statement>
+
+<jump_statement> ::= "continue" ";"
+                   | "break" ";"
+                   | "return" ";"
+                   | "return" <expression> ";"
+
+<export_statement> ::= "export" <identifier_list> ";"
+                     | "export" <identifier> "as" <identifier> ";"
+
+<identifier_list> ::= <identifier>
+                    | <identifier_list> "," <identifier>
+
+<import_statement> ::= "import" <identifier> ";"
+                     | "import" <identifier_list> "from" <identifier> ";"
+
+<compound_statement> ::= "{" <statement_list> "}"
+
+; --------------------------------------------------------------------------- ;
+
+<expression> ::= <conditional_expression>
+
+<conditional_expression> ::= <logical_or_expression>
+                           | <logical_or_expression> "?" <expression> ":" <expression>
+
+<logical_or_expression> ::= <logical_and_expression>
+                          | <logical_or_expression> "||" <logical_and_expression>
+
+<logical_and_expression> ::= <inclusive_or_expression>
+                           | <logical_and_expression> "&&" <inclusive_or_expression>
+
+<inclusive_or_expression> ::= <exclusive_or_expression>
+                            | <inclusive_or_expression> "|" <exclusive_or_expression>
+
+<exclusive_or_expression> ::= <and_expression>
+                            | <exclusive_or_expression> "^" <and_expression>
+
+<and_expression> ::= <equality_expression>
+                   | <and_expression> "&" <equality_expression>
+
+<equality_expression> ::= <relational_expression>
+                        | <equality_expression> <equality_operator> <relational_expression>
+
+<equality_operator> ::= "==" | "!="
+
+<relational_expression> ::= <shift_expression>
+                          | <relational_expression> <relational_operator> <shift_expression>
+
+<relational_operator> ::= "<" | ">" | "<=" | ">="
+
+<shift_expression> ::= <additive_expression>
+                     | <shift_expression> <shift_operator> <additive_expression>
+
+<shift_operator> ::= "<<" | ">>"
+
+<additive_expression> ::= <multiplicative_expression>
+                        | <additive_expression> <additive_operator> <multiplicative_expression>
+
+<additive_operator> ::= "+" | "-"
+
+<multiplicative_expression> ::= <unary_expression>
+                              | <multiplicative_expression> <multiplicative_operator> <unary_expression>
+
+<multiplicative_operator> ::= "*" | "/" | "%"
+
+<unary_expression> ::= <postfix_expression>
+                     | <constant>
+                     | <unary_operator> <unary_expression>
+
+<unary_operator> ::= <arithmetic_unary_operator>
+                   | <logical_unary_operator>
+
+<arithmetic_unary_operator> ::= '+' | '-' | '~'
+
+<logical_unary_operator> ::= '!'
+
+<postfix_expression> ::= <variable>
+                       | "(" <expression> ")"
+                       | <lambda>
+                       | <postfix_expression> "(" <expression_list> ")"
+                       | <postfix_expression> "(" ")"
+                       | "cast" "<" <identifier> ">" "(" <expression> ")"
+
+<constant> ::= <integer>
+             | <floating_point>
+             | <literal_string>
+
+<expression_list> ::= <expression>
+                    | <expression_list> "," <expression>
+
+; --------------------------------------------------------------------------- ;
+
+<class_declaration> ::= "class" <identifier> <generic_type_specifier> "{" <class_member_list> "}"
+
+<generic_type_specifier> ::= ""
+                           | "<" <identifier_list> ">"
+
+<class_member_list> ::= ""
+                      | <class_member_list> <class_member>
+
+<class_member> ::= <variable_declaration_clause> ";"
+                 | <member_function_definition>
+
+<member_function_definition> ::= <member_function_declaration> <compound_statement>
+
+<member_function_declaration> ::= <no_returned_value_member_function_declaration>
+                                | <no_returned_value_member_function_declaration> "->" <type_specifier>
+
+<no_returned_value_member_function_declaration> ::= "func" <identifier> <generic_type_specifier> "(" <member_function_declaration_parameter_list> ")"
+
+<member_function_declaration_parameter_list> ::= "self"
+                                               | "self" "," <parameter_and_type_list>
+                                               | "self" "," <parameter_and_type_list> "," "..."
+                                               | <function_declaration_parameter_list>
+
+; --------------------------------------------------------------------------- ;
+
+<function_definition> ::= <function_declaration> <compound_statement>
+
+<function_declaration> ::= <no_returned_value_function_declaration>
+                         | <no_returned_value_function_declaration> "->" <type_specifier>
+
+<no_returned_value_function_declaration> ::= "func" <identifier> <generic_type_specifier> "(" <function_declaration_parameter_list> ")"
+
+<function_declaration_parameter_list> ::= ""
+                                        | <parameter_and_type_list>
+                                        | <parameter_and_type_list> "," "..."
+
+<parameter_and_type_list> ::= <parameter_and_type>
+                            | <parameter_and_type_list> "," <parameter_and_type>
+
+<parameter_and_type> ::= <type_specifier>
+                       | <identifier_and_type>
+
+; --------------------------------------------------------------------------- ;
+
+<lambda> ::= <lambda_declaration> <compound_statement>
+
+<lambda_declaration> ::= <no_returned_value_lambda_declaration> "->" <type_specifier>
+
+<no_returned_value_lambda_declaration> ::= <lambda_introducer> "(" <function_declaration_parameter_list> ")"
+
+<lambda_introducer> ::= "[" "]"
+                      | "[" <lambda_capture_list> "]"
+
+<lambda_capture_list> ::= <lambda_capture>
+                        | <lambda_capture_list> "," <lambda_capture>
+
+<lambda_capture> ::= <identifier>
+                   | <identifier> "=" <expression>
+
+; --------------------------------------------------------------------------- ;
+
+<interface_definition> ::= "interface" <identifier> <generic_type_specifier> <parent_interface_type_list> "{" <interface_member_list> "}"
+
+<parent_interface_type_list> ::= ""
+                               | ":" <identifier_list>
+
+<interface_member_list> ::= <interface_member>
+                          | <interface_member_list> <interface_member>
+
+<interface_member> ::= <member_function_declaration> ";"
+                     | <member_function_definition>
+
+<interface_impl_definition> ::= "impl" <identifier> "for" <identifier> "{" <member_function_definition_list> "}"
+
+<member_function_definition_list> ::= ""
+                                    | <member_function_definition_list> <member_function_definition>
+
+; --------------------------------------------------------------------------- ;
+
+<type_specifier> ::= "int" | "float" | "str"
+                   | <identifier> <generic_type_specifier>
+                   | <function_type>
+
+<function_type> ::= <no_returned_value_function_type>
+                  | <no_returned_value_function_type> "->" <type_specifier>
+
+<no_returned_value_function_type> ::= "func" <generic_type_specifier> "(" <function_declaration_parameter_list> ")"
+
+; --------------------------------------------------------------------------- ;
+
+<identifier> ::= <character_of_identifier> <character_or_digit_sequence>
+
+<character_or_digit_sequence> ::= ""
+                                | <character_or_digit_sequence> <character_of_identifier>
+                                | <character_or_digit_sequence> <digit>
+
+<character_of_identifier> ::= "_"
+                            | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+                            | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+                            | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
+                            | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+
+; --------------------------------------------------------------------------- ;
+
+<integer> ::= <digit_sequence>
+            | <digit_sequence> <exponent_specifier> <positive_plain_integer>
+
+<positive_plain_integer> ::= <digit_sequence>
+                           | "+" <digit_sequence>
+
+<negative_plain_integer> ::= "-" <digit_sequence>
+
+<floating_point> ::= <fractional>
+                   | <fractional> <exponent_specifier> <digit_sequence>
+                   | <digit_sequence> <exponent_specifier> <negative_plain_integer>
+
+<fractional> ::= <digit_sequence> "." <digit_sequence>
+
+<exponent_specifier> ::= "e" | "E"
+
+<digit_sequence> ::= <digit>
+                   | <digit_sequence> <digit>
+
+<digit> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+
+; --------------------------------------------------------------------------- ;
+
+<literal_string> ::= "\"" <non-quote-characters> "\""
