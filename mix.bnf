@@ -1,11 +1,12 @@
-<block> ::= <statement_list>
+<block> ::= <optional_statement_list>
 
-<statement_list> ::= ""
-                   | <statement_list> <statement>
+<optional_statement_list> ::= ""
+                            | <optional_statement_list> <statement>
 
 ; --------------------------------------------------------------------------- ;
 
-<statement> ::= <expression> ";"
+<statement> ::= ";"
+              | <expression> ";"
               | <assignment_statement>
               | <variable_declaration_clause> ";"
               | <selection_statement>
@@ -14,24 +15,19 @@
               | <import_statement>
               | <export_statement>
               | <compound_statement>
-              | <class_declaration>
+              | <enum_declaration>
               | <function_definition>
-              | <interface_definition>
-              | <interface_impl_definition>
+              | <struct_declaration>
+              | <struct_impl_definition>
+              | <trait_definition>
+              | <trait_impl_definition>
 
 <assignment_statement> ::= <variable> "=" <initializer> ";"
                          | <variable> <assignment_operator> <expression> ";"
 
-<variable> ::= <id_expression>
+<variable> ::= <identifier>
              | <postfix_expression> "[" <expression> "]"
              | <postfix_expression> "." <identifier>
-             | "self" "." <identifier>
-
-<id_expression> ::= <identifier>
-                  | <nested_name_specifier> <identifier>
-
-<nested_name_specifier> ::= <identifier> "::"
-                          | <nested_name_specifier> <identifier> "::"
 
 <assignment_operator> ::= "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>="
 
@@ -47,43 +43,54 @@
 <identifier_and_type> ::= <identifier> ":" <type_specifier>
 
 <initializer> ::= <expression>
-                | "{" <initializer_clause_list> "}"
-                | "{" <initializer_clause_list> "," "}"
+                | <braced_initializer>
+
+<braced_initializer> ::= "{" "}"
+                       | "{" <initializer_clause_list> "}"
+                       | "{" <initializer_clause_list> "," "}"
+                       | "{" <expression_list> "}"
+                       | "{" <expression_list> "," "}"
 
 <initializer_clause_list> ::= <initializer_clause>
                             | <initializer_clause_list> "," <initializer_clause>
 
 <initializer_clause> ::= <identifier> "=" <initializer>
+                       | <braced_initializer>
 
 <selection_statement> ::= "if" <expression> <compound_statement>
+                        | "if" <expression> <compound_statement> "else" <selection_statement>
                         | "if" <expression> <compound_statement> "else" <compound_statement>
 
 <iteration_statement> ::= "while" <expression> <compound_statement>
                         | "do" <compound_statement> "while" <expression> ";"
                         | "for" <identifier> "in" <expression> <compound_statement>
 
+<compound_statement> ::= "{" <optional_statement_list> "}"
+
 <jump_statement> ::= "continue" ";"
                    | "break" ";"
                    | "return" ";"
                    | "return" <expression> ";"
 
+; --------------------------------------------------------------------------- ;
+
 <export_statement> ::= "export" <identifier_list> ";"
-                     | "export" <identifier> "as" <identifier> ";"
 
 <identifier_list> ::= <identifier>
                     | <identifier_list> "," <identifier>
 
-<import_statement> ::= "import" <identifier> ";"
-                     | "import" <identifier_list> "from" <identifier> ";"
+<import_statement> ::= "import" <identifier_list> ";"
+                     | "import" <import_source> "as" <identifier> ";"
 
-<compound_statement> ::= "{" <statement_list> "}"
+<import_source> ::= <identifier>
+                  | <literal_string>
 
 ; --------------------------------------------------------------------------- ;
 
 <expression> ::= <conditional_expression>
 
 <conditional_expression> ::= <logical_or_expression>
-                           | <logical_or_expression> "?" <expression> ":" <expression>
+                           | <logical_or_expression> "?" <conditional_expression> ":" <conditional_expression>
 
 <logical_or_expression> ::= <logical_and_expression>
                           | <logical_or_expression> "||" <logical_and_expression>
@@ -139,9 +146,13 @@
 <postfix_expression> ::= <variable>
                        | "(" <expression> ")"
                        | <lambda>
+                       | <nested_name_specifier> <identifier>
                        | <postfix_expression> "(" <expression_list> ")"
+                       | <postfix_expression> "(" <braced_initializer> ")"
                        | <postfix_expression> "(" ")"
-                       | "cast" "<" <identifier> ">" "(" <expression> ")"
+                       | "cast" "<" <type_specifier> ">" "(" <expression> ")"
+
+<lambda> ::= <function_type> <compound_statement>
 
 <constant> ::= <integer>
              | <floating_point>
@@ -152,28 +163,16 @@
 
 ; --------------------------------------------------------------------------- ;
 
-<class_declaration> ::= "class" <identifier> <generic_type_specifier> "{" <class_member_list> "}"
+<enum_declaration> ::= "enum" "{" <optional_enum_member_list> "}"
 
-<generic_type_specifier> ::= ""
-                           | "<" <identifier_list> ">"
+<optional_enum_member_list> ::= ""
+                              | <enum_member_list>
+                              | <enum_member_list> ','
 
-<class_member_list> ::= ""
-                      | <class_member_list> <class_member>
-
-<class_member> ::= <variable_declaration_clause> ";"
-                 | <member_function_definition>
-
-<member_function_definition> ::= <member_function_declaration> <compound_statement>
-
-<member_function_declaration> ::= <no_returned_value_member_function_declaration>
-                                | <no_returned_value_member_function_declaration> "->" <type_specifier>
-
-<no_returned_value_member_function_declaration> ::= "func" <identifier> <generic_type_specifier> "(" <member_function_declaration_parameter_list> ")"
-
-<member_function_declaration_parameter_list> ::= "self"
-                                               | "self" "," <parameter_and_type_list>
-                                               | "self" "," <parameter_and_type_list> "," "..."
-                                               | <function_declaration_parameter_list>
+<enum_member_list> ::= <identifier>
+                     | <identifier> '=' <integer>
+                     | <enum_member_list> "," <identifier>
+                     | <enum_member_list> "," <identifier> "=" <integer>
 
 ; --------------------------------------------------------------------------- ;
 
@@ -182,7 +181,7 @@
 <function_declaration> ::= <no_returned_value_function_declaration>
                          | <no_returned_value_function_declaration> "->" <type_specifier>
 
-<no_returned_value_function_declaration> ::= "func" <identifier> <generic_type_specifier> "(" <function_declaration_parameter_list> ")"
+<no_returned_value_function_declaration> ::= "func" <identifier> <optional_generic_type_specifier> "(" <function_declaration_parameter_list> ")"
 
 <function_declaration_parameter_list> ::= ""
                                         | <parameter_and_type_list>
@@ -194,51 +193,84 @@
 <parameter_and_type> ::= <type_specifier>
                        | <identifier_and_type>
 
-; --------------------------------------------------------------------------- ;
-
-<lambda> ::= <lambda_declaration> <compound_statement>
-
-<lambda_declaration> ::= <no_returned_value_lambda_declaration> "->" <type_specifier>
-
-<no_returned_value_lambda_declaration> ::= <lambda_introducer> "(" <function_declaration_parameter_list> ")"
-
-<lambda_introducer> ::= "[" "]"
-                      | "[" <lambda_capture_list> "]"
-
-<lambda_capture_list> ::= <lambda_capture>
-                        | <lambda_capture_list> "," <lambda_capture>
-
-<lambda_capture> ::= <identifier>
-                   | <identifier> "=" <expression>
-
-; --------------------------------------------------------------------------- ;
-
-<interface_definition> ::= "interface" <identifier> <generic_type_specifier> <parent_interface_type_list> "{" <interface_member_list> "}"
-
-<parent_interface_type_list> ::= ""
-                               | ":" <identifier_list>
-
-<interface_member_list> ::= <interface_member>
-                          | <interface_member_list> <interface_member>
-
-<interface_member> ::= <member_function_declaration> ";"
-                     | <member_function_definition>
-
-<interface_impl_definition> ::= "impl" <identifier> "for" <identifier> "{" <member_function_definition_list> "}"
-
-<member_function_definition_list> ::= ""
-                                    | <member_function_definition_list> <member_function_definition>
-
-; --------------------------------------------------------------------------- ;
-
-<type_specifier> ::= "int" | "float" | "str"
-                   | <identifier> <generic_type_specifier>
-                   | <function_type>
-
 <function_type> ::= <no_returned_value_function_type>
                   | <no_returned_value_function_type> "->" <type_specifier>
 
-<no_returned_value_function_type> ::= "func" <generic_type_specifier> "(" <function_declaration_parameter_list> ")"
+<no_returned_value_function_type> ::= "func" <optional_generic_type_specifier> "(" <function_declaration_parameter_list> ")"
+
+; --------------------------------------------------------------------------- ;
+
+<struct_declaration> ::= "struct" <identifier> <optional_generic_type_specifier> "{" <optional_struct_member_list> "}"
+
+<optional_generic_type_specifier> ::= ""
+                                    | <generic_type_specifier>
+
+<generic_type_specifier> ::= "<|" <type_specifier_list> "|>"
+
+<type_specifier_list> ::= <type_specifier>
+                        | <type_specifier_list> "," <type_specifier>
+
+<optional_struct_member_list> ::= ""
+                                | <optional_struct_member_list> <struct_member>
+
+<struct_member> ::= <variable_declaration_clause> ";"
+
+<struct_impl_definition> ::= "impl" <identifier> <optional_generic_type_specifier> "{" <optional_member_function_list> "}"
+
+<optional_member_function_list> ::= ""
+                                  | <optional_member_function_list> <member_function_definition>
+
+<member_function_definition> ::= <member_function_declaration> <compound_statement>
+
+<member_function_declaration> ::= <no_returned_value_member_function_declaration>
+                                | <no_returned_value_member_function_declaration> "->" <member_function_return_type>
+
+<member_function_return_type> ::= <type_specifier>
+                                | "self"
+
+<no_returned_value_member_function_declaration> ::= "func" <identifier> <optional_generic_type_specifier> "(" <member_function_declaration_parameter_list> ")"
+
+<member_function_declaration_parameter_list> ::= <member_function_first_self_param>
+                                               | <member_function_first_self_param> "," <parameter_and_type_list>
+                                               | <member_function_first_self_param> "," <parameter_and_type_list> "," "..."
+                                               | <function_declaration_parameter_list>
+
+<member_function_first_self_param> ::= "self"
+                                     | <identifier> ":" "self"
+
+; --------------------------------------------------------------------------- ;
+
+<trait_definition> ::= "trait" <identifier> <optional_generic_type_specifier> <optional_constraint_trait_specifier> "{" <optional_trait_member_list> "}"
+
+<optional_constraint_trait_specifier> ::= ""
+                                        | ":" <constraint_trait_list>
+
+<constraint_trait_list> ::= <non_function_user_type_specifier>
+                          | <constraint_trait_list> "," <non_function_user_type_specifier>
+
+<optional_trait_member_list> ::= ""
+                               | <optional_trait_member_list> <trait_member>
+
+<trait_member> ::= <member_function_declaration> ";"
+                 | <member_function_definition>
+
+<trait_impl_definition> ::= "impl" <identifier> <optional_generic_type_specifier> "for" <identifier> <optional_generic_type_specifier> "{" <optional_member_function_list> "}"
+
+; --------------------------------------------------------------------------- ;
+
+<atomic_type_specifier> ::= "f32" | "f64" | "i8" | "i16" | "i32" | "i64"
+
+<non_function_user_type_specifier> ::= <identifier> <optional_generic_type_specifier>
+                                     | <nested_name_specifier> <identifier> <optional_generic_type_specifier>
+
+<user_type_specifier> ::= <non_function_user_type_specifier>
+                        | <function_type>
+
+<type_specifier> ::= <atomic_type_specifier>
+                   | <user_type_specifier>
+
+<nested_name_specifier> ::= <identifier> <optional_generic_type_specifier> "::"
+                          | <nested_name_specifier> <identifier> <optional_generic_type_specifier> "::"
 
 ; --------------------------------------------------------------------------- ;
 
