@@ -1,0 +1,9 @@
+struct Test {
+    var v : i32 = 5;
+}
+
+impl Test {
+    func GetValue(t: self) -> i32 {
+        return t.v;
+    }
+}

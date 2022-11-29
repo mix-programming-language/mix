@@ -1,0 +1,64 @@
+import stdio as io;
+
+# -------------------------------------------------------------------------- #
+
+struct PointData {
+    var x: i32;
+    var y: i32;
+}
+
+trait Point {
+    func GetData(p: self) -> self {
+        return p;
+    }
+}
+
+#impl Point for PointData {}
+
+# -------------------------------------------------------------------------- #
+
+trait ShapeOp {
+    func GetName(self) -> string;
+    func CalcArea() -> i32;
+}
+
+struct Circle {
+    var radius: i32;
+}
+
+struct Square {
+    var length: i32;
+}
+
+impl ShapeOp for Circle {
+    func GetName(self) -> string {
+        return "circle";
+    }
+}
+
+impl ShapeOp for Square {
+    func GetName(self) -> string {
+        return "square";
+    }
+}
+
+func PrintShapeOpName(s: ShapeOp) {
+    io::print("name -> {}\n", s.GetName());
+}
+
+# -------------------------------------------------------------------------- #
+
+var c: Circle = { radius = 5 };
+var s: Square = { length = 10 };
+
+PrintShapeOpName(c);
+PrintShapeOpName(s);
+
+func PrintShapeOpNames(vec: vector<|ShapeOp|>) {
+    for s in vec {
+        io::print("name -> {}\n", s.GetName());
+    }
+}
+
+var vec: vector<|ShapeOp|> = {c, s};
+PrintShapeOpNames(vec);

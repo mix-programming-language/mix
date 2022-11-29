@@ -1,0 +1,15 @@
+struct Test<|T|> {}
+
+struct Test2<|T, X, Y|> {}
+
+var f = func<|X, Y, Z|>(x: X, y: Y, z: Z) -> X {};
+
+var a = f<|i32, string, f32|>(1, "2", 3.0);
+
+var b: Test2<|A, B, C|> = {x = 1, y = "2", c = 3.0};
+
+var c: Test<|A|> = {};
+
+trait Echo<|T|> {}
+
+impl Echo<|T|> for Test<|S|> {}

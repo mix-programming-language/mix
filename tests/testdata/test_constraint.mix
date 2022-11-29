@@ -1,0 +1,16 @@
+trait Shape {
+    func GetName(self) -> string;
+}
+
+trait Circle : Shape {}
+
+impl Shape for Square {
+    func New() -> self {
+        return Square();
+    }
+    func GetName(self) -> string {
+        return "square";
+    }
+}
+
+trait AnotherShape : Shape1, Shape2 {}

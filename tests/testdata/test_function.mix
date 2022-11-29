@@ -1,0 +1,18 @@
+import stdio as io;
+
+func Echo(i: i32) {
+    io::print("{}\n", i);
+}
+
+# returned value can be deduced from the return clause
+func __return_self(v: string) -> string {
+    return v;
+}
+
+;;; # empty statements
+
+func __func_as_param(f: func(i:i32) -> i32) -> func(i32) -> i32 {
+    return f;
+}
+
+func __variadic_param(x: i32, ...) {}

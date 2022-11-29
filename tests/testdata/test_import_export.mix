@@ -1,0 +1,9 @@
+import stdio;
+import stdio, math;
+import stdio as io;
+import "/path/to/module.mix" as module;
+
+export foobar;
+export foo, bar, baz;
+
+io::print("hello, world!");

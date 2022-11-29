@@ -1,0 +1,11 @@
+struct MyType {}
+
+impl MyType {
+    func __clone__(self) -> self; # disable cloning
+    func __destroy__(m: self) {
+        # ...
+    }
+}
+
+var a: MyType;
+var b = std::Clone(a);

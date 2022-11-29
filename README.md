@@ -4,7 +4,6 @@
 
 * bison and lexer validations(working on branch `bison`)
 * hex/oct number format support
-* immutable variable(using the `final` keyword)
 * documentation and tutorial
 * coroutine
 * variadic generics grammar

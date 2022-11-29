@@ -1,0 +1,21 @@
+while x != f() {}
+
+while x != f() {
+    x += f();
+    break;
+}
+
+do {
+    x += 31e-5;
+    x = x << 3;
+} while x <= 32;
+
+
+for i in vec {
+    i += a.f();
+    i += a::y();
+}
+
+while 1 {
+    continue;
+}

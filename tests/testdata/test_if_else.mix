@@ -1,0 +1,7 @@
+if a == 1 {
+    print("ok\n");
+} else if b == f(32) {
+    print("not\n");
+} else {
+    print("else clause has a pair of {}\n");
+}

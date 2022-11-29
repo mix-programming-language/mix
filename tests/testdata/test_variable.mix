@@ -1,0 +1,12 @@
+struct MyType {
+    var x: i32;
+    var y: i32;
+}
+
+var b: MyType = {x = 3, y = 5};
+
+var c = MyType::SubType::f();
+
+(123);
+(b());
+(c())[k] = value;

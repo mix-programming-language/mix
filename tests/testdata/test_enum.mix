@@ -1,0 +1,19 @@
+enum {}
+
+enum {
+    UNKNOWN = 0,
+    A,
+    B,
+    C = 1000,
+    D,
+    E
+}
+
+enum {
+    UNKNOWN = 0,
+    A,
+    B,
+    C = 1000,
+    D,
+    E,
+}
