@@ -38,7 +38,7 @@
 
 <variable_declaration_with_optional_assignment> ::= <identifier_and_type>
                                                   | <identifier_and_type> "=" <initializer>
-                                                  | <identifier> "=" <initializer>
+                                                  | <identifier> "=" <expression>
 
 <identifier_and_type> ::= <identifier> ":" <type_specifier>
 

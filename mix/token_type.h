@@ -40,7 +40,6 @@ enum {
     MIX_TT_KEYWORD_await, /* reserved */
     MIX_TT_KEYWORD_break,
     MIX_TT_KEYWORD_cast,
-    MIX_TT_KEYWORD_const,
     MIX_TT_KEYWORD_continue,
     MIX_TT_KEYWORD_do,
     MIX_TT_KEYWORD_else,
@@ -60,6 +59,7 @@ enum {
     MIX_TT_KEYWORD_impl,
     MIX_TT_KEYWORD_import,
     MIX_TT_KEYWORD_in,
+    MIX_TT_KEYWORD_let, /* reserved */
     MIX_TT_KEYWORD_marco, /* reserved */
     MIX_TT_KEYWORD_override, /* reserved */
     MIX_TT_KEYWORD_return,

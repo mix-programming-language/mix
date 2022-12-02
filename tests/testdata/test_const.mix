@@ -1,5 +1,0 @@
-const a: i32 = 5;
-
-const t: MyType<|T|> = {};
-
-const f = func() {};

@@ -44,7 +44,6 @@ static const int g_m2b_type[] = {
     BISON_KEYWORD_await,
     BISON_KEYWORD_break,
     BISON_KEYWORD_cast,
-    BISON_KEYWORD_const,
     BISON_KEYWORD_continue,
     BISON_KEYWORD_do,
     BISON_KEYWORD_else,
@@ -64,6 +63,7 @@ static const int g_m2b_type[] = {
     BISON_KEYWORD_impl,
     BISON_KEYWORD_import,
     BISON_KEYWORD_in,
+    BISON_KEYWORD_let,
     BISON_KEYWORD_macro,
     BISON_KEYWORD_override,
     BISON_KEYWORD_return,
@@ -133,7 +133,6 @@ static void yyerror(const char *msg) {
 %token BISON_KEYWORD_await
 %token BISON_KEYWORD_break
 %token BISON_KEYWORD_cast
-%token BISON_KEYWORD_const
 %token BISON_KEYWORD_continue
 %token BISON_KEYWORD_do
 %token BISON_KEYWORD_else
@@ -153,6 +152,7 @@ static void yyerror(const char *msg) {
 %token BISON_KEYWORD_impl
 %token BISON_KEYWORD_import
 %token BISON_KEYWORD_in
+%token BISON_KEYWORD_let
 %token BISON_KEYWORD_macro
 %token BISON_KEYWORD_override
 %token BISON_KEYWORD_return
@@ -207,7 +207,6 @@ assignment_operator : BISON_OP_ADD_ASSIGN | BISON_OP_SUB_ASSIGN | BISON_OP_MUL_A
                     ;
 
 variable_declaration_clause : BISON_KEYWORD_var variable_declaration_with_optional_assignment_list
-                            | BISON_KEYWORD_const variable_declaration_with_optional_assignment_list
                             ;
 
 variable_declaration_with_optional_assignment_list : variable_declaration_with_optional_assignment
@@ -216,7 +215,7 @@ variable_declaration_with_optional_assignment_list : variable_declaration_with_o
 
 variable_declaration_with_optional_assignment : identifier_and_type
                                               | identifier_and_type '=' initializer
-                                              | BISON_SYM_IDENTIFIER '=' initializer
+                                              | BISON_SYM_IDENTIFIER '=' expression
                                               ;
 
 identifier_and_type : BISON_SYM_IDENTIFIER ':' type_specifier
