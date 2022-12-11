@@ -15,6 +15,7 @@
               | <import_statement>
               | <export_statement>
               | <compound_statement>
+              | <alias_statement>
               | <enum_declaration>
               | <function_definition>
               | <struct_declaration>
@@ -72,6 +73,8 @@
                    | "return" ";"
                    | "return" <expression> ";"
 
+<alias_statement> ::= "alias" <type_specifier> <identifier> ";"
+
 ; --------------------------------------------------------------------------- ;
 
 <export_statement> ::= "export" <identifier_list> ";"
@@ -79,11 +82,21 @@
 <identifier_list> ::= <identifier>
                     | <identifier_list> "," <identifier>
 
-<import_statement> ::= "import" <identifier_list> ";"
+<import_statement> ::= "import" <import_item_list> ";"
                      | "import" <import_source> "as" <identifier> ";"
 
+<import_item_list> ::= <import_item>
+                     | <import_item_list> "," <import_item>
+
+<import_item> ::= <identifier>
+                | <nested_import_scope> <identifier>
+
 <import_source> ::= <identifier>
+                  | <nested_import_scope> <identifier>
                   | <literal_string>
+
+<nested_import_scope> ::= <identifier> "::"
+                        | <nested_import_scope> <identifier> "::"
 
 ; --------------------------------------------------------------------------- ;
 
@@ -245,8 +258,8 @@
 <optional_constraint_trait_specifier> ::= ""
                                         | ":" <constraint_trait_list>
 
-<constraint_trait_list> ::= <non_function_user_type_specifier>
-                          | <constraint_trait_list> "," <non_function_user_type_specifier>
+<constraint_trait_list> ::= <user_type_specifier>
+                          | <constraint_trait_list> "," <user_type_specifier>
 
 <optional_trait_member_list> ::= ""
                                | <optional_trait_member_list> <trait_member>
@@ -258,16 +271,14 @@
 
 ; --------------------------------------------------------------------------- ;
 
-<atomic_type_specifier> ::= "f32" | "f64" | "i8" | "i16" | "i32" | "i64"
-
-<non_function_user_type_specifier> ::= <identifier> <optional_generic_type_specifier>
-                                     | <nested_name_specifier> <identifier> <optional_generic_type_specifier>
-
-<user_type_specifier> ::= <non_function_user_type_specifier>
-                        | <function_type>
-
-<type_specifier> ::= <atomic_type_specifier>
+<type_specifier> ::= <builtin_type_specifier>
                    | <user_type_specifier>
+
+<builtin_type_specifier> ::= "f32" | "f64" | "i8" | "i16" | "i32" | "i64" | "str"
+
+<user_type_specifier> ::= <identifier> <optional_generic_type_specifier>
+                        | <nested_name_specifier> <identifier> <optional_generic_type_specifier>
+                        | <function_type>
 
 <nested_name_specifier> ::= <identifier> <optional_generic_type_specifier> "::"
                           | <nested_name_specifier> <identifier> <optional_generic_type_specifier> "::"

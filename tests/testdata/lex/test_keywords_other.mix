@@ -1,0 +1,3 @@
+var f : f32 = 100;
+var f = 100;
+var s : str = "abcde";

@@ -5,6 +5,9 @@ static const char* g_retcode_str[] = {
     "success",
     "invalid",
     "no mem",
+    "exists",
+    "not found",
+    "not implemented",
 };
 
 const char* mix_get_retcode_str(mix_retcode_t rc) {

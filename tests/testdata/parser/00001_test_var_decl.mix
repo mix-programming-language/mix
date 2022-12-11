@@ -1,0 +1,4 @@
+var a: i32 = 5;
+var a: f32 = 3.0; # error
+var l: f32 = 3.0;
+var ll: unknown = 1; # error
