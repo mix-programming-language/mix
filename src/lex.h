@@ -1,14 +1,13 @@
 #ifndef __MIX_LEX_H__
 #define __MIX_LEX_H__
 
-#include "typedef.h"
-#include "retcode.h"
-#include "cutils/qbuf.h"
+#include "mix/retcode.h"
 #include "cutils/qbuf_ref.h"
 #include "cutils/robin_hood_hash.h"
 
 enum {
     MIX_TT_INVALID = 0,
+    MIX_TT_EOF,
 
     MIX_TT_CHAR,
     MIX_TT_LITERAL_STRING,
@@ -41,7 +40,6 @@ enum {
     MIX_TT_SYM_GENERICS_RIGHT_MARK, /* |> */
     MIX_TT_SYM_VARIADIC_ARG,        /* ... */
 
-    MIX_TT_KEYWORD_alias,
     MIX_TT_KEYWORD_as,
     MIX_TT_KEYWORD_async, /* reserved */
     MIX_TT_KEYWORD_await, /* reserved */
@@ -74,6 +72,7 @@ enum {
     MIX_TT_KEYWORD_str,
     MIX_TT_KEYWORD_struct,
     MIX_TT_KEYWORD_trait,
+    MIX_TT_KEYWORD_typedef,
     MIX_TT_KEYWORD_typeof, /* reserved */
     MIX_TT_KEYWORD_var,
     MIX_TT_KEYWORD_virtual, /* reserved */
@@ -96,7 +95,6 @@ union mix_token_info {
     int64_t l;
     double d;
     struct qbuf_ref s;
-    struct qbuf str; /* for MIX_TT_LITERAL_STRING only */
 };
 
 mix_retcode_t mix_lex_init(struct mix_lex*, const char* buf, uint32_t len);

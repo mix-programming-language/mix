@@ -15,7 +15,7 @@
               | <import_statement>
               | <export_statement>
               | <compound_statement>
-              | <alias_statement>
+              | <typedef_statement>
               | <enum_declaration>
               | <function_definition>
               | <struct_declaration>
@@ -23,7 +23,8 @@
               | <trait_definition>
               | <trait_impl_definition>
 
-<assignment_statement> ::= <variable> "=" <initializer> ";"
+<assignment_statement> ::= <variable> "=" <expression> ";"
+                         | <variable> "=" <braced_initializer> ";"
                          | <variable> <assignment_operator> <expression> ";"
 
 <variable> ::= <identifier>
@@ -38,13 +39,11 @@
                                                        | <variable_declaration_with_optional_assignment_list> "," <variable_declaration_with_optional_assignment>
 
 <variable_declaration_with_optional_assignment> ::= <identifier_and_type>
-                                                  | <identifier_and_type> "=" <initializer>
+                                                  | <identifier_and_type> "=" <braced_initializer>
+                                                  | <identifier_and_type> "=" <expression>
                                                   | <identifier> "=" <expression>
 
 <identifier_and_type> ::= <identifier> ":" <type_specifier>
-
-<initializer> ::= <expression>
-                | <braced_initializer>
 
 <braced_initializer> ::= "{" "}"
                        | "{" <initializer_clause_list> "}"
@@ -55,7 +54,8 @@
 <initializer_clause_list> ::= <initializer_clause>
                             | <initializer_clause_list> "," <initializer_clause>
 
-<initializer_clause> ::= <identifier> "=" <initializer>
+<initializer_clause> ::= <identifier> "=" <expression>
+                       | <identifier> "=" <braced_initializer>
                        | <braced_initializer>
 
 <selection_statement> ::= "if" <expression> <compound_statement>
@@ -73,7 +73,7 @@
                    | "return" ";"
                    | "return" <expression> ";"
 
-<alias_statement> ::= "alias" <type_specifier> <identifier> ";"
+<typedef_statement> ::= "typedef" <type_specifier> <identifier> ";"
 
 ; --------------------------------------------------------------------------- ;
 
@@ -83,17 +83,13 @@
                     | <identifier_list> "," <identifier>
 
 <import_statement> ::= "import" <import_item_list> ";"
-                     | "import" <import_source> "as" <identifier> ";"
+                     | "import" <import_item> "as" <identifier> ";"
 
 <import_item_list> ::= <import_item>
                      | <import_item_list> "," <import_item>
 
 <import_item> ::= <identifier>
                 | <nested_import_scope> <identifier>
-
-<import_source> ::= <identifier>
-                  | <nested_import_scope> <identifier>
-                  | <literal_string>
 
 <nested_import_scope> ::= <identifier> "::"
                         | <nested_import_scope> <identifier> "::"
@@ -163,7 +159,7 @@
                        | <postfix_expression> "(" <expression_list> ")"
                        | <postfix_expression> "(" <braced_initializer> ")"
                        | <postfix_expression> "(" ")"
-                       | "cast" "<" <type_specifier> ">" "(" <expression> ")"
+                       | "cast" "<|" <type_specifier> "|>" "(" <expression> ")"
 
 <lambda> ::= <function_type> <compound_statement>
 
@@ -197,6 +193,7 @@
 <no_returned_value_function_declaration> ::= "func" <identifier> <optional_generic_type_specifier> "(" <function_declaration_parameter_list> ")"
 
 <function_declaration_parameter_list> ::= ""
+                                        | "..."
                                         | <parameter_and_type_list>
                                         | <parameter_and_type_list> "," "..."
 
@@ -244,6 +241,7 @@
 <no_returned_value_member_function_declaration> ::= "func" <identifier> <optional_generic_type_specifier> "(" <member_function_declaration_parameter_list> ")"
 
 <member_function_declaration_parameter_list> ::= <member_function_first_self_param>
+                                               | <member_function_first_self_param> "," "..."
                                                | <member_function_first_self_param> "," <parameter_and_type_list>
                                                | <member_function_first_self_param> "," <parameter_and_type_list> "," "..."
                                                | <function_declaration_parameter_list>

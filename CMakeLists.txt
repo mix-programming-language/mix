@@ -20,7 +20,7 @@ if(NOT TARGET cutils_static)
         GIT_TAG master
         SOURCE_DIR ${MIX_DEPS_DIR}/cutils
         BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/cutils-build
-        SUBBUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/cutils-subbuild)
+        SUBBUILD_DIR ${MIX_DEPS_DIR}/cutils-subbuild)
     FetchContent_MakeAvailable(cutils)
 endif()
 
@@ -38,20 +38,22 @@ endif()
 
 # ----- targets ----- #
 
-set(__ASAN_FLAGS__ "-fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${__ASAN_FLAGS__}")
-unset(__ASAN_FLAGS__)
+# if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+#     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer")
+# endif()
 
-file(GLOB MIX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/mix/*.c)
-add_library(mix_static STATIC ${MIX_SRC})
+execute_process(COMMAND bison -d ${CMAKE_CURRENT_SOURCE_DIR}/bison/mix.y -Wcounterexamples)
+
+file(GLOB __MIX_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_BINARY_DIR}/mix.tab.c)
+add_library(mix_static STATIC ${__MIX_SRC__})
 target_include_directories(mix_static PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${xxhash_SOURCE_DIR})
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_features(mix_static PUBLIC cxx_std_11)
 target_link_libraries(mix_static PUBLIC cutils_static logger_static m)
 
-# ----- tests ----- #
+# ----- ----- #
 
-add_subdirectory(bison)
 add_subdirectory(tests)
+add_subdirectory(tools)

@@ -1,0 +1,4 @@
+import std::io, std::string;
+
+var s = std::string::format("equation: {} + {} = {}\n", 1, 1, 1 + 1);
+std::io::print(s);

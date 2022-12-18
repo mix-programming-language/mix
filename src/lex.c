@@ -19,7 +19,6 @@ struct keyword_info {
 };
 
 static const struct keyword_info g_keyword[] = {
-    {"alias", 5, MIX_TT_KEYWORD_alias},
     {"as", 2, MIX_TT_KEYWORD_as},
     {"async", 5, MIX_TT_KEYWORD_async},
     {"await", 5, MIX_TT_KEYWORD_await},
@@ -52,6 +51,7 @@ static const struct keyword_info g_keyword[] = {
     {"str", 3, MIX_TT_KEYWORD_str},
     {"struct", 6, MIX_TT_KEYWORD_struct},
     {"trait", 5, MIX_TT_KEYWORD_trait},
+    {"typedef", 7, MIX_TT_KEYWORD_typedef},
     {"typeof", 6, MIX_TT_KEYWORD_typeof},
     {"var", 3, MIX_TT_KEYWORD_var},
     {"virtual", 7, MIX_TT_KEYWORD_virtual},
@@ -93,7 +93,7 @@ static mix_retcode_t init_keyword_hash(struct robin_hood_hash* h) {
     }
 
     for (int i = 0; g_keyword[i].word; ++i) {
-        robin_hood_hash_insert(h, (void*)&g_keyword[i]);
+        robin_hood_hash_insert(h, (const void*)&g_keyword[i], (void*)&g_keyword[i]);
     }
 
     return MIX_RC_OK;
@@ -133,49 +133,30 @@ static inline void backward(struct mix_lex* lex) {
     --lex->lineoff;
 }
 
-static mix_token_type_t parse_literal_string(struct mix_lex* lex, struct qbuf* token) {
+static mix_token_type_t parse_literal_string(struct mix_lex* lex, union mix_token_info* token) {
     forward(lex); /* skip starting '"' */
-    const char* cursor = lex->cursor;
+    token->s.base = lex->cursor;
 
-    qbuf_init(token);
     while (1) {
         char c = current(lex);
         if (c == EOF) {
             return MIX_TT_INVALID;
         }
 
+        /* TODO handle escaped chars */
         if (c == '\\') {
-            if (cursor != lex->cursor) { /* copy non-escaped chars */
-                qbuf_append(token, cursor, lex->cursor - cursor);
-            }
-
             forward(lex); /* skip '\\' */
             c = current(lex);
-            switch (c) {
-                case 'a': qbuf_append_c(token, '\a'); break;
-                case 'b': qbuf_append_c(token, '\b'); break;
-                case 'e': qbuf_append_c(token, '\e'); break;
-                case 'f': qbuf_append_c(token, '\f'); break;
-                case 'n': qbuf_append_c(token, '\n'); break;
-                case 'r': qbuf_append_c(token, '\r'); break;
-                case 't': qbuf_append_c(token, '\t'); break;
-                case 'v': qbuf_append_c(token, '\v'); break;
-                case '\\': qbuf_append_c(token, '\\'); break;
-                case '\'': qbuf_append_c(token, '\''); break;
-                case '"': qbuf_append_c(token, '"'); break;
-                case '?': qbuf_append_c(token, '?'); break;
-                /* TODO add hex/oct support */
-                default: qbuf_append_c(token, c); break;
+            if (c == EOF) {
+                return MIX_TT_INVALID;
             }
-            forward(lex); /* skip escaped char */
-            c = current(lex);
-            cursor = lex->cursor;
+
+            forward(lex); /* skip the escaped char */
+            continue;
         }
 
         if (c == '"') {
-            if (cursor != lex->cursor) { /* copy non-escaped chars */
-                qbuf_append(token, cursor, lex->cursor - cursor);
-            }
+            token->s.size = lex->cursor - (const char*)token->s.base;
             forward(lex);
             return MIX_TT_LITERAL_STRING;
         }
@@ -339,7 +320,7 @@ mix_token_type_t mix_lex_get_next_token(struct mix_lex* lex, union mix_token_inf
             continue;
         }
         if (c == '"') {
-            return parse_literal_string(lex, &token->str);
+            return parse_literal_string(lex, token);
         }
         if (isdigit(c)) {
             return parse_number(lex, token);
@@ -524,7 +505,10 @@ mix_token_type_t mix_lex_get_next_token(struct mix_lex* lex, union mix_token_inf
             }
         }
 
-        /* returns current char and move to the next */
+        if (c == EOF) {
+            return MIX_TT_EOF;
+        }
+
         token->c = c;
         return MIX_TT_CHAR;
     }
@@ -533,5 +517,5 @@ mix_token_type_t mix_lex_get_next_token(struct mix_lex* lex, union mix_token_inf
 }
 
 void mix_lex_destroy(struct mix_lex* lex) {
-    robin_hood_hash_destroy(&lex->keyword_hash);
+    robin_hood_hash_destroy(&lex->keyword_hash, NULL, NULL);
 }

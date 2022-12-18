@@ -1,0 +1,8 @@
+var s:str;
+s = "Hello, world!";
+
+import std::io, std::string;
+std::io::print(std::string::format("{}\n", s));
+std::io::print(std::string::format("\{\}\n"));
+std::io::print(std::string::format("\{}\n"));
+std::io::print(std::string::format("{\}\n"));

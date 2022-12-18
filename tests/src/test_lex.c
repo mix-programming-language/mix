@@ -1,4 +1,5 @@
-#include "mix/lex.h"
+#include "src/lex.h"
+#include "src/debug_utils.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -49,6 +50,21 @@ static void test_float() {
     do_test_float("3e-3", 0.003);
 }
 
+static void do_test_string(const char* str, const char* expected) {
+    struct mix_lex lex;
+    mix_lex_init(&lex, str, strlen(str));
+
+    union mix_token_info token;
+    mix_token_type_t ret = mix_lex_get_next_token(&lex, &token);
+    printf("get string -> [%s]\n", make_tmp_str_s(&token.s));
+    assert(ret == MIX_TT_LITERAL_STRING);
+    assert(strcmp(expected, make_tmp_str_s(&token.s)) == 0);
+}
+
+static void test_literal_string() {
+    do_test_string("\"{} + {} = {}\"", "{} + {} = {}");
+}
+
 #define TEST_ITEM(func) {#func, func}
 
 struct {
@@ -57,6 +73,7 @@ struct {
 } g_test_suite[] = {
     TEST_ITEM(test_int),
     TEST_ITEM(test_float),
+    TEST_ITEM(test_literal_string),
     TEST_ITEM(NULL),
 };
 
