@@ -1,5 +1,5 @@
-#ifndef __MIX_TYPE_H__
-#define __MIX_TYPE_H__
+#ifndef __MIX_COMMON_MIX_TYPE_H__
+#define __MIX_COMMON_MIX_TYPE_H__
 
 #include "typedef_internal.h"
 #include "cutils/qbuf.h"

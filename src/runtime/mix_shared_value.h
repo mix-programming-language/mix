@@ -1,7 +1,7 @@
-#ifndef __MIX_SHARED_VALUE_H__
-#define __MIX_SHARED_VALUE_H__
+#ifndef __MIX_RUNTIME_MIX_SHARED_VALUE_H__
+#define __MIX_RUNTIME_MIX_SHARED_VALUE_H__
 
-#include "type.h"
+#include "common/mix_type.h"
 #include "cutils/qbuf.h"
 
 struct mix_shared_value {

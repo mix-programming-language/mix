@@ -1,5 +1,5 @@
-#include "src/lex.h"
-#include "src/debug_utils.h"
+#include "lex/mix_lex.h"
+#include "misc/debug_utils.h"
 #include <stdio.h>
 #include <string.h>
 

@@ -18,7 +18,7 @@
               | <typedef_statement>
               | <enum_declaration>
               | <function_definition>
-              | <struct_declaration>
+              | <struct_definition>
               | <struct_impl_definition>
               | <trait_definition>
               | <trait_impl_definition>
@@ -38,25 +38,20 @@
 <variable_declaration_with_optional_assignment_list> ::= <variable_declaration_with_optional_assignment>
                                                        | <variable_declaration_with_optional_assignment_list> "," <variable_declaration_with_optional_assignment>
 
-<variable_declaration_with_optional_assignment> ::= <identifier_and_type>
-                                                  | <identifier_and_type> "=" <braced_initializer>
-                                                  | <identifier_and_type> "=" <expression>
+<variable_declaration_with_optional_assignment> ::= <identifier> ":" <type_specifier>
+                                                  | <identifier> ":" <type_specifier> "=" <braced_initializer>
+                                                  | <identifier> ":" <type_specifier> "=" <expression>
                                                   | <identifier> "=" <expression>
-
-<identifier_and_type> ::= <identifier> ":" <type_specifier>
 
 <braced_initializer> ::= "{" "}"
                        | "{" <initializer_clause_list> "}"
                        | "{" <initializer_clause_list> "," "}"
-                       | "{" <expression_list> "}"
-                       | "{" <expression_list> "," "}"
 
 <initializer_clause_list> ::= <initializer_clause>
                             | <initializer_clause_list> "," <initializer_clause>
 
 <initializer_clause> ::= <identifier> "=" <expression>
                        | <identifier> "=" <braced_initializer>
-                       | <braced_initializer>
 
 <selection_statement> ::= "if" <expression> <compound_statement>
                         | "if" <expression> <compound_statement> "else" <selection_statement>
@@ -156,19 +151,20 @@
                        | "(" <expression> ")"
                        | <lambda>
                        | <nested_name_specifier> <identifier>
-                       | <postfix_expression> "(" <expression_list> ")"
-                       | <postfix_expression> "(" <braced_initializer> ")"
+                       | <postfix_expression> "(" <expression_or_braced_initializer_list> ")"
                        | <postfix_expression> "(" ")"
                        | "cast" "<|" <type_specifier> "|>" "(" <expression> ")"
 
 <lambda> ::= <function_type> <compound_statement>
 
+<expression_or_braced_initializer_list> ::= <expression>
+                                          | <braced_initializer>
+                                          | <expression_or_braced_initializer_list> "," <expression>
+                                          | <expression_or_braced_initializer_list> "," <braced_initializer>
+
 <constant> ::= <integer>
              | <floating_point>
              | <literal_string>
-
-<expression_list> ::= <expression>
-                    | <expression_list> "," <expression>
 
 ; --------------------------------------------------------------------------- ;
 
@@ -201,7 +197,7 @@
                             | <parameter_and_type_list> "," <parameter_and_type>
 
 <parameter_and_type> ::= <type_specifier>
-                       | <identifier_and_type>
+                       | <identifier> ":" <type_specifier>
 
 <function_type> ::= <no_returned_value_function_type>
                   | <no_returned_value_function_type> "->" <type_specifier>
@@ -210,7 +206,7 @@
 
 ; --------------------------------------------------------------------------- ;
 
-<struct_declaration> ::= "struct" <identifier> <optional_generic_type_specifier> "{" <optional_struct_member_list> "}"
+<struct_definition> ::= "struct" <identifier> <optional_generic_type_specifier> "{" <optional_struct_member_list> "}"
 
 <optional_generic_type_specifier> ::= ""
                                     | <generic_type_specifier>

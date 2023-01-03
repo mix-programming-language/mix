@@ -1,5 +1,5 @@
-#include "lex.h"
-#include "debug_utils.h"
+#include "mix_lex.h"
+#include "misc/debug_utils.h"
 #include "cutils/str_utils.h"
 #include "cutils/hash_func.h"
 #include <math.h> /* pow() */

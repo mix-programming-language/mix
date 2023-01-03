@@ -1,5 +1,5 @@
-#ifndef __MIX_QBUF_REF_HASH_UTILS_H__
-#define __MIX_QBUF_REF_HASH_UTILS_H__
+#ifndef __MIX_MISC_QBUF_REF_HASH_UTILS_H__
+#define __MIX_MISC_QBUF_REF_HASH_UTILS_H__
 
 #include "cutils/qbuf_ref.h"
 #include "cutils/hash_func.h"

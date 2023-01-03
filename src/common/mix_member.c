@@ -1,4 +1,4 @@
-#include "member.h"
+#include "mix_member.h"
 #include <stdlib.h>
 
 struct mix_member* mix_member_new() {

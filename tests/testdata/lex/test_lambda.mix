@@ -1,5 +1,5 @@
 var f = func (i: i32, f: f32) -> string {
-    return cast<string>(i) + cast<string>(f) + tmp;
+    return cast<|string|>(i) + cast<|string|>(f) + tmp;
 };
 
 var g = func (k: string) {};

@@ -1,7 +1,7 @@
-#ifndef __MIX_TYPE_OR_VALUE_H__
-#define __MIX_TYPE_OR_VALUE_H__
+#ifndef __MIX_RUNTIME_MIX_TYPE_OR_VALUE_H__
+#define __MIX_RUNTIME_MIX_TYPE_OR_VALUE_H__
 
-#include "shared_value.h"
+#include "runtime/mix_shared_value.h"
 #include "mix/mix_func_t.h"
 #include <stdint.h>
 

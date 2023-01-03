@@ -1,6 +1,7 @@
-#ifndef __MIX_UTILS_H__
-#define __MIX_UTILS_H__
+#ifndef __MIX_MISC_UTILS_H__
+#define __MIX_MISC_UTILS_H__
 
+#include "mix/retcode.h"
 #include "cutils/qbuf.h"
 #include <stdint.h>
 #include <errno.h>
@@ -38,6 +39,30 @@ static inline mix_retcode_t read_file_content(const char* fpath, struct qbuf* re
 end:
     fclose(fp);
     return MIX_RC_OK;
+}
+
+static inline const char* make_tmp_str_s(const struct qbuf_ref* s) {
+    static char buf[1024];
+    int sz = (s->size > 1023) ? 1023 : s->size;
+    memcpy(buf, s->base, sz);
+    buf[s->size] = '\0';
+    return buf;
+}
+
+static inline const char* make_tmp_str_sl(const char* s, int l) {
+    static char buf[1024];
+    if (l > 1023) {
+        l = 1023;
+    }
+    memcpy(buf, s, l);
+    buf[l] = '\0';
+    return buf;
+}
+
+static inline const char* make_tmp_str(const struct qbuf_ref* s, char buf[]) {
+    memcpy(buf, s->base, s->size);
+    buf[s->size] = '\0';
+    return buf;
 }
 
 #endif

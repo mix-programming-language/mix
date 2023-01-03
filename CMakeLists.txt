@@ -32,7 +32,7 @@ if(NOT TARGET logger_static)
         GIT_TAG master
         SOURCE_DIR ${MIX_DEPS_DIR}/logger
         BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/logger-build
-        SUBBUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/logger-subbuild)
+        SUBBUILD_DIR ${MIX_DEPS_DIR}/logger-subbuild)
     FetchContent_MakeAvailable(logger)
 endif()
 
@@ -44,10 +44,10 @@ endif()
 
 execute_process(COMMAND bison -d ${CMAKE_CURRENT_SOURCE_DIR}/bison/mix.y -Wcounterexamples)
 
-file(GLOB __MIX_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_BINARY_DIR}/mix.tab.c)
+file(GLOB_RECURSE __MIX_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_BINARY_DIR}/mix.tab.c)
 add_library(mix_static STATIC ${__MIX_SRC__})
 target_include_directories(mix_static PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_features(mix_static PUBLIC cxx_std_11)

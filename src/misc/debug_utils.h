@@ -1,30 +1,9 @@
 #ifndef __MIX_DEBUG_UTILS_H__
 #define __MIX_DEBUG_UTILS_H__
 
-#include "type_or_value.h"
+#include "runtime/mix_type_or_value.h"
 #include "cutils/qbuf_ref.h"
-#include <stdio.h>
-#include <string.h>
-
-static inline const char* make_tmp_str_s(const struct qbuf_ref* s) {
-    static char buf[1024];
-    memcpy(buf, s->base, s->size);
-    buf[s->size] = '\0';
-    return buf;
-}
-
-static inline const char* make_tmp_str_sl(const char* s, int l) {
-    static char buf[1024];
-    memcpy(buf, s, l);
-    buf[l] = '\0';
-    return buf;
-}
-
-static inline const char* make_tmp_str(const struct qbuf_ref* s, char buf[]) {
-    memcpy(buf, s->base, s->size);
-    buf[s->size] = '\0';
-    return buf;
-}
+#include "utils.h"
 
 static int print_stack_func(void* item, void* arg) {
     uint32_t* counter = (uint32_t*)arg;

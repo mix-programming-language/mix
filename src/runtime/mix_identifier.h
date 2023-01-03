@@ -1,7 +1,7 @@
-#ifndef __MIX_IDENTIFIER_H__
-#define __MIX_IDENTIFIER_H__
+#ifndef __MIX_RUNTIME_MIX_IDENTIFIER_H__
+#define __MIX_RUNTIME_MIX_IDENTIFIER_H__
 
-#include "type_or_value.h"
+#include "mix_type_or_value.h"
 #include "cutils/qbuf.h"
 
 struct mix_identifier {

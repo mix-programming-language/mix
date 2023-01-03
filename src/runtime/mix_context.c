@@ -1,21 +1,15 @@
-#include "lex.h"
-#include "typedef_internal.h"
-#include "context_internal.h"
-#include "identifier.h"
-#include "parser.h"
-#include "shared_value.h"
-#include "block.h"
-#include "type_or_value.h"
-#include "qbuf_ref_hash_utils.h"
-#include "lib_info.h"
-#include "utils.h" /* read_file_content() */
+#include "mix_context.h"
+#include "mix_identifier.h"
+#include "mix_shared_value.h"
+#include "mix_type_or_value.h"
+#include "mix_lib_info.h"
+#include "parser/mix_parser.h"
+#include "common/typedef_internal.h"
+#include "misc/utils.h" /* read_file_content() */
+#include "misc/qbuf_ref_hash_utils.h"
 #include "cutils/utils.h" /* container_of() */
 #include "logger/dummy_logger.h"
 #include <stdlib.h> /* malloc() */
-
-#ifndef NDEBUG
-#include "debug_utils.h"
-#endif
 
 /* -------------------------------------------------------------------------- */
 
@@ -31,7 +25,7 @@ int32_t mix_get_stack_size(struct mix_context* ctx) {
     return vector_size(&ctx->runtime_stack) - ctx->runtime_stack_base_idx;
 }
 
-static struct mix_type_or_value* __get_item(struct mix_context* ctx, int32_t idx) {
+struct mix_type_or_value* __get_item(struct mix_context* ctx, int32_t idx) {
     int32_t stk_sz = mix_get_stack_size(ctx);
     if (idx < 0) {
         idx += stk_sz;
@@ -44,6 +38,39 @@ static struct mix_type_or_value* __get_item(struct mix_context* ctx, int32_t idx
 }
 
 /* -------------------------------------------------------------------------- */
+
+static const void* lib_info_getkey_func(const void* value) {
+    const struct mix_lib_info* info = (const struct mix_lib_info*)value;
+    return qbuf_get_ref(&info->name);
+}
+
+static const struct robin_hood_hash_operations g_lib_info_ops = {
+    .equal = qbuf_ref_equal_func,
+    .hash = qbuf_ref_hash_func,
+    .getkey = lib_info_getkey_func,
+};
+
+static const void* type_hash_getkey_func(const void* data) {
+    const struct mix_type* t = (const struct mix_type*)data;
+    return qbuf_get_ref(&t->name);
+}
+
+static const struct robin_hood_hash_operations g_type_hash_ops = {
+    .equal = qbuf_ref_equal_func,
+    .getkey = type_hash_getkey_func,
+    .hash = qbuf_ref_hash_func,
+};
+
+static const void* var_hash_getkey_func(const void* data) {
+    const struct mix_identifier* var = (const struct mix_identifier*)data;
+    return qbuf_get_ref(&var->name);
+}
+
+static const struct robin_hood_hash_operations g_var_hash_ops = {
+    .equal = qbuf_ref_equal_func,
+    .getkey = var_hash_getkey_func,
+    .hash = qbuf_ref_hash_func,
+};
 
 static struct mix_type* create_type(const char* name, int32_t name_sz,
                                     mix_type_t type, struct robin_hood_hash* type_hash,
@@ -111,16 +138,17 @@ static mix_retcode_t add_builtin_type(struct robin_hood_hash* type_hash, struct 
     return MIX_RC_OK;
 }
 
-static const void* lib_info_getkey_func(const void* value) {
-    const struct mix_lib_info* info = (const struct mix_lib_info*)value;
-    return qbuf_get_ref(&info->prefix);
+static void __destroy_type_func(void* data, void* nil) {
+    mix_type_release((struct mix_type*)data);
 }
 
-static const struct robin_hood_hash_operations g_lib_info_ops = {
-    .equal = qbuf_ref_equal_func,
-    .hash = qbuf_ref_hash_func,
-    .getkey = lib_info_getkey_func,
-};
+static void __destroy_var_func(void* data, void* nil) {
+    mix_identifier_delete((struct mix_identifier*)data);
+}
+
+static void __destroy_libs_func(void* data, void* nil) {
+    mix_lib_info_delete((struct mix_lib_info*)data);
+}
 
 struct mix_context* mix_context_new(struct logger* l) {
     struct mix_context* ctx = (struct mix_context*)malloc(sizeof(struct mix_context));
@@ -128,75 +156,67 @@ struct mix_context* mix_context_new(struct logger* l) {
         return NULL;
     }
 
+    dummy_logger_init(&ctx->dummy_logger);
     if (l) {
         ctx->logger = l;
     } else {
-        dummy_logger_init(&ctx->dummy_logger);
         ctx->logger = &ctx->dummy_logger;
     }
 
-    int ret = robin_hood_hash_init(&ctx->libs, 10, ROBIN_HOOD_HASH_DEFAULT_MAX_LOAD_FACTOR,
-                                   &g_lib_info_ops);
-    if (ret != 0) {
-        logger_error(ctx->logger, "init lib hash failed.");
+    int err = robin_hood_hash_init(&ctx->type_hash, 20, ROBIN_HOOD_HASH_DEFAULT_MAX_LOAD_FACTOR,
+                                   &g_type_hash_ops);
+    if (err) {
+        logger_error(ctx->logger, "init type hash failed.");
         goto err1;
     }
 
-    struct mix_block* root_block = mix_block_new();
-    if (!root_block) {
-        logger_error(ctx->logger, "new root block failed.");
+    err = robin_hood_hash_init(&ctx->var_hash, 20, ROBIN_HOOD_HASH_DEFAULT_MAX_LOAD_FACTOR,
+                               &g_var_hash_ops);
+    if (err) {
+        logger_error(ctx->logger, "init var hash failed.");
         goto err2;
     }
 
-    mix_retcode_t rc = add_builtin_type(&root_block->type_hash, ctx->logger);
-    if (rc != MIX_RC_OK) {
-        logger_error(ctx->logger, "reserve builtin type failed: %s.", mix_get_retcode_str(rc));
+    err = robin_hood_hash_init(&ctx->libs, 10, ROBIN_HOOD_HASH_DEFAULT_MAX_LOAD_FACTOR,
+                               &g_lib_info_ops);
+    if (err) {
+        logger_error(ctx->logger, "init lib hash failed.");
         goto err3;
     }
 
-    vector_init(&ctx->runtime_stack, sizeof(struct mix_type_or_value));
-
-    vector_init(&ctx->block_stack, sizeof(struct mix_block*));
-
-    ret = vector_push_back(&ctx->block_stack, &root_block);
-    if (ret != 0) {
-        logger_error(ctx->logger, "add root block failed: out of memory.");
-        goto err3;
+    mix_retcode_t rc = add_builtin_type(&ctx->type_hash, ctx->logger);
+    if (rc != MIX_RC_OK) {
+        logger_error(ctx->logger, "reserve builtin type failed: %s.", mix_get_retcode_str(rc));
+        goto err4;
     }
 
     ctx->runtime_stack_base_idx = 0;
+    vector_init(&ctx->runtime_stack, sizeof(struct mix_type_or_value));
 
     return ctx;
 
-err3:
-    mix_block_delete(root_block);
-err2:
+err4:
     robin_hood_hash_destroy(&ctx->libs, NULL, NULL);
+err3:
+    robin_hood_hash_destroy(&ctx->var_hash, NULL, NULL);
+err2:
+    robin_hood_hash_destroy(&ctx->type_hash, NULL, __destroy_type_func);
 err1:
     free(ctx);
     return NULL;
 }
 
-static void destroy_block_func(void* item, void* nil) {
-    struct mix_block* b = (struct mix_block*)(*(void**)item);
-    mix_block_delete(b);
-}
-
-static void destroy_tov_func(void* data, void* nil) {
+static void __destroy_tov_func(void* data, void* nil) {
     struct mix_type_or_value* tov = (struct mix_type_or_value*)data;
     mix_type_or_value_destroy(tov);
 }
 
-static void destroy_libs_func(void* data, void* nil) {
-    struct mix_lib_info* info = (struct mix_lib_info*)data;
-    mix_lib_info_delete(info);
-}
-
 void mix_context_delete(struct mix_context* ctx) {
     if (ctx) {
-        vector_destroy(&ctx->runtime_stack, NULL, destroy_tov_func);
-        robin_hood_hash_destroy(&ctx->libs, NULL, destroy_libs_func);
-        vector_destroy(&ctx->block_stack, NULL, destroy_block_func);
+        vector_destroy(&ctx->runtime_stack, NULL, __destroy_tov_func);
+        robin_hood_hash_destroy(&ctx->var_hash, NULL, __destroy_var_func);
+        robin_hood_hash_destroy(&ctx->type_hash, NULL, __destroy_type_func);
+        robin_hood_hash_destroy(&ctx->libs, NULL, __destroy_libs_func);
         free(ctx);
     }
 }
@@ -213,8 +233,18 @@ mix_type_t mix_get_type(struct mix_context* ctx, int32_t idx) {
     return type->value;
 }
 
-static mix_retcode_t push_integer(struct mix_context* ctx, int64_t value, struct qbuf_ref* tname) {
-    struct mix_type* type = mix_parser_lookup_type(ctx, tname);
+static const struct qbuf_ref g_type2name[] = {
+    {NULL, 0},
+    {"i8", 2},
+    {"i16", 3},
+    {"i32", 3},
+    {"i64", 3},
+    {"f32", 3},
+    {"f64", 3},
+};
+
+mix_retcode_t __push_integer(struct mix_context* ctx, int64_t value, mix_type_t t) {
+    struct mix_type* type = robin_hood_hash_lookup(&ctx->type_hash, &g_type2name[t]);
 
     struct mix_type_or_value item = {
         .type = MIX_TOV_ATOMIC_VALUE,
@@ -233,27 +263,23 @@ static mix_retcode_t push_integer(struct mix_context* ctx, int64_t value, struct
 }
 
 mix_retcode_t mix_push_i8(struct mix_context* ctx, int8_t value) {
-    struct qbuf_ref tname = {.base = "i8", .size = 2};
-    return push_integer(ctx, value, &tname);
+    return __push_integer(ctx, value, MIX_TYPE_I8);
 }
 
 mix_retcode_t mix_push_i16(struct mix_context* ctx, int16_t value) {
-    struct qbuf_ref tname = {.base = "i16", .size = 3};
-    return push_integer(ctx, value, &tname);
+    return __push_integer(ctx, value, MIX_TYPE_I16);
 }
 
 mix_retcode_t mix_push_i32(struct mix_context* ctx, int32_t value) {
-    struct qbuf_ref tname = {.base = "i32", .size = 3};
-    return push_integer(ctx, value, &tname);
+    return __push_integer(ctx, value, MIX_TYPE_I32);
 }
 
 mix_retcode_t mix_push_i64(struct mix_context* ctx, int64_t value) {
-    struct qbuf_ref tname = {.base = "i64", .size = 3};
-    return push_integer(ctx, value, &tname);
+    return __push_integer(ctx, value, MIX_TYPE_I64);
 }
 
-static mix_retcode_t push_float(struct mix_context* ctx, double value, struct qbuf_ref* tname) {
-    struct mix_type* type = mix_parser_lookup_type(ctx, tname);
+mix_retcode_t __push_float(struct mix_context* ctx, double value, mix_type_t t) {
+    struct mix_type* type = robin_hood_hash_lookup(&ctx->type_hash, &g_type2name[t]);
 
     struct mix_type_or_value item = {
         .type = MIX_TOV_ATOMIC_VALUE,
@@ -272,13 +298,11 @@ static mix_retcode_t push_float(struct mix_context* ctx, double value, struct qb
 }
 
 mix_retcode_t mix_push_f32(struct mix_context* ctx, float value) {
-    struct qbuf_ref tname = {.base = "f32", .size = 3};
-    return push_float(ctx, value, &tname);
+    return __push_float(ctx, value, MIX_TYPE_F32);
 }
 
 mix_retcode_t mix_push_f64(struct mix_context* ctx, double value) {
-    struct qbuf_ref tname = {.base = "f64", .size = 3};
-    return push_float(ctx, value, &tname);
+    return __push_float(ctx, value, MIX_TYPE_F64);
 }
 
 mix_retcode_t mix_push_str(struct mix_context* ctx, const char* str, int32_t len) {
@@ -288,7 +312,7 @@ mix_retcode_t mix_push_str(struct mix_context* ctx, const char* str, int32_t len
     }
 
     struct qbuf_ref tname = {.base = "str", .size = 3};
-    v->type = mix_parser_lookup_type(ctx, &tname);
+    v->type = robin_hood_hash_lookup(&ctx->type_hash, &tname);
     mix_type_acquire(v->type);
     qbuf_assign(&v->s, str, len);
 
@@ -315,7 +339,7 @@ mix_retcode_t mix_push_func(struct mix_context* ctx, const char* func_type_name,
 mix_retcode_t mix_pop(struct mix_context* ctx, int32_t nr_item) {
     int32_t stk_sz = vector_size(&ctx->runtime_stack);
     int32_t new_sz = (stk_sz < nr_item) ? 0 : (stk_sz - nr_item);
-    int ret = vector_resize(&ctx->runtime_stack, new_sz, NULL, destroy_tov_func);
+    int ret = vector_resize(&ctx->runtime_stack, new_sz, NULL, __destroy_tov_func);
     return (ret == 0) ? MIX_RC_OK : MIX_RC_INTERNAL_ERROR;
 }
 
@@ -343,7 +367,7 @@ mix_retcode_t mix_remove(struct mix_context* ctx, int32_t idx) {
             return MIX_RC_INVALID;
         }
     }
-    vector_remove(&ctx->runtime_stack, idx, NULL, destroy_tov_func);
+    vector_remove(&ctx->runtime_stack, idx, NULL, __destroy_tov_func);
     return MIX_RC_OK;
 }
 
@@ -372,8 +396,7 @@ mix_retcode_t mix_new_func_type_begin(struct mix_context* ctx) {
 }
 
 static mix_retcode_t __set_func_ret_type(struct mix_context* ctx, const struct qbuf_ref* tname) {
-    struct mix_block* root_block = __get_root_block(ctx);
-    struct mix_type* type = robin_hood_hash_lookup(&root_block->type_hash, tname);
+    struct mix_type* type = robin_hood_hash_lookup(&ctx->type_hash, tname);
     if (!type) {
         logger_error(ctx->logger, "type [%s] not found.", tname->base);
         return MIX_RC_NOT_FOUND;
@@ -438,8 +461,7 @@ mix_retcode_t mix_new_func_type_set_ret_str(struct mix_context* ctx) {
 
 static mix_retcode_t __add_func_arg_type(struct mix_context* ctx,
                                          const struct qbuf_ref* tname) {
-    struct mix_block* root_block = __get_root_block(ctx);
-    struct mix_type* type = robin_hood_hash_lookup(&root_block->type_hash, tname);
+    struct mix_type* type = robin_hood_hash_lookup(&ctx->type_hash, tname);
     if (!type) {
         logger_error(ctx->logger, "type [%s] not found.", tname->base);
         return MIX_RC_NOT_FOUND;
@@ -641,17 +663,9 @@ const char* mix_to_str(struct mix_context* ctx, int32_t idx, int32_t* len) {
 
 mix_retcode_t mix_get(struct mix_context* ctx, const char* name) {
     struct qbuf_ref qname = {.base = name, .size = strlen(name)};
-    struct mix_identifier* var = NULL;
-
-    uint32_t sz = vector_size(&ctx->block_stack);
-    for (uint32_t i = sz; i > 0; --i) {
-        struct mix_block* block = (struct mix_block*)(*(void**)vector_at(&ctx->block_stack, i - 1));
-        var = (struct mix_identifier*)robin_hood_hash_lookup(&block->var_hash, &qname);
-        if (var) {
-            break;
-        }
-    }
+    struct mix_identifier* var = (struct mix_identifier*)robin_hood_hash_lookup(&ctx->var_hash, &qname);
     if (!var) {
+        logger_error(ctx->logger, "cannot find variable [%s].", name);
         return MIX_RC_NOT_FOUND;
     }
 
@@ -678,10 +692,9 @@ mix_retcode_t mix_set(struct mix_context* ctx, const char* name) {
         return MIX_RC_NOMEM;
     }
 
-    struct mix_block* root_block = __get_root_block(ctx);
     struct qbuf_ref qname = {.base = name, .size = strlen(name)};
     struct robin_hood_hash_insertion_res res =
-        robin_hood_hash_insert(&root_block->var_hash, &qname, NULL);
+        robin_hood_hash_insert(&ctx->var_hash, &qname, NULL);
     if (!res.inserted) {
         mix_identifier_delete(var);
         return MIX_RC_EXISTS;
@@ -707,11 +720,11 @@ mix_retcode_t mix_set(struct mix_context* ctx, const char* name) {
 
 /* -------------------------------------------------------------------------- */
 
-mix_retcode_t mix_register(struct mix_context* ctx, const char* prefix,
+mix_retcode_t mix_register(struct mix_context* ctx, const char* lib_name,
                            const char* name) {
-    struct qbuf_ref qprefix = {.base = prefix, .size = strlen(prefix)};
+    struct qbuf_ref qlib_name = {.base = lib_name, .size = strlen(lib_name)};
     struct robin_hood_hash_insertion_res res = robin_hood_hash_insert(
-        &ctx->libs, &qprefix, NULL);
+        &ctx->libs, &qlib_name, NULL);
     if (!res.pvalue) {
         logger_error(ctx->logger, "create lib info failed: out of memory.");
         return MIX_RC_NOMEM;
@@ -719,7 +732,7 @@ mix_retcode_t mix_register(struct mix_context* ctx, const char* prefix,
 
     struct mix_lib_info* info;
     if (res.inserted) {
-        info = mix_lib_info_new(&qprefix);
+        info = mix_lib_info_new(&qlib_name);
         if (!info) {
             logger_error(ctx->logger, "create lib info failed: out of memory.");
             return MIX_RC_NOMEM;
@@ -736,7 +749,7 @@ mix_retcode_t mix_register(struct mix_context* ctx, const char* prefix,
     }
     qbuf_assign(&var->name, name, strlen(name));
 
-    int ret = vector_push_back(&info->var_list, &var);
+    int ret = vector_push_back(&info->identifier_list, &var);
     if (ret != 0) {
         logger_error(ctx->logger, "add new variable failed: out of memory.");
         mix_identifier_delete(var);
@@ -752,19 +765,28 @@ mix_retcode_t mix_register(struct mix_context* ctx, const char* prefix,
 
 /* -------------------------------------------------------------------------- */
 
-#include "mix.tab.h"
-
 mix_retcode_t mix_eval_buffer(struct mix_context* ctx, const char* buf,
-                              int32_t sz, const char* prefix) {
-    struct mix_lex lex;
-    mix_lex_init(&lex, buf, sz);
-    yyparse(ctx, &lex, buf, sz, prefix);
-    mix_lex_destroy(&lex);
-    return MIX_RC_OK;
+                              int32_t sz, const char* lib_name) {
+    struct mix_parser parser;
+    mix_retcode_t rc = mix_parser_init(&parser, ctx);
+    if (rc != MIX_RC_OK) {
+        logger_error(ctx->logger, "init parser failed: %s.", mix_get_retcode_str(rc));
+        return rc;
+    }
+
+    rc = mix_parser_parse(&parser, buf, sz, ctx->logger);
+    if (rc != MIX_RC_OK) {
+        logger_error(ctx->logger, "parse failed.");
+        return rc;
+    }
+
+    mix_parser_destroy(&parser);
+
+    return rc;
 }
 
 mix_retcode_t mix_eval_file(struct mix_context* ctx, const char* fpath,
-                            const char* prefix) {
+                            const char* lib_name) {
     struct qbuf file_content;
     qbuf_init(&file_content);
 
@@ -774,7 +796,7 @@ mix_retcode_t mix_eval_file(struct mix_context* ctx, const char* fpath,
     }
 
     ret = mix_eval_buffer(ctx, qbuf_data(&file_content), qbuf_size(&file_content),
-                          prefix);
+                          lib_name);
     qbuf_destroy(&file_content);
 
     return ret;

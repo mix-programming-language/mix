@@ -2,7 +2,7 @@
 
 ### TODO list
 
-* bison and lexer validations(working on branch `bison`)
+* bison and lexer validations(working on branch `ast`)
 * hex/oct number format support
 * documentation and tutorial
 * emacs/vim syntax support

@@ -1,11 +1,12 @@
-#ifndef __MIX_BLOCK_H__
-#define __MIX_BLOCK_H__
+#ifndef __MIX_PARSER_MIX_BLOCK_H__
+#define __MIX_PARSER_MIX_BLOCK_H__
 
-#include "cutils/vector.h"
+#include "cutils/list.h"
 #include "cutils/robin_hood_hash.h"
 
 struct mix_block {
-    struct robin_hood_hash var_hash; /* struct qbuf_ref* => struct mix_identifier* */
+    struct list_node node;
+    struct robin_hood_hash id_hash; /* struct qbuf_ref* => struct mix_identifier* */
     struct robin_hood_hash type_hash; /* struct qbuf_ref* => struct mix_type* */
 };
 

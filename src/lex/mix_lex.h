@@ -1,5 +1,5 @@
-#ifndef __MIX_LEX_H__
-#define __MIX_LEX_H__
+#ifndef __MIX_LEX_MIX_LEX_H__
+#define __MIX_LEX_MIX_LEX_H__
 
 #include "mix/retcode.h"
 #include "cutils/qbuf_ref.h"

@@ -1,7 +1,7 @@
-#ifndef __MIX_MEMBER_H__
-#define __MIX_MEMBER_H__
+#ifndef __MIX_COMMON_MIX_MEMBER_H__
+#define __MIX_COMMON_MIX_MEMBER_H__
 
-#include "type.h"
+#include "mix_type.h"
 
 struct mix_member {
     struct qbuf name;

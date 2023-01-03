@@ -19,6 +19,11 @@ enum {
 
 typedef uint32_t mix_type_t;
 
+#define MIX_TYPE_IS_INT(t) ((t) >= MIX_TYPE_I8 && (t) <= MIX_TYPE_I64)
+#define MIX_TYPE_IS_FLOAT(t) ((t) == MIX_TYPE_F32 || (t) == MIX_TYPE_F64)
+#define MIX_TYPE_IS_NUM(t) ((t) >= MIX_TYPE_I8 && (t) <= MIX_TYPE_F64)
+#define MIX_TYPE_IS_ATOMIC(t) ((t) >= MIX_TYPE_I8 && (t) <= MIX_TYPE_FUNC)
+
 const char* mix_get_type_name(mix_type_t t);
 
 #endif

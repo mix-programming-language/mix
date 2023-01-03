@@ -1,22 +1,22 @@
-#include "block.h"
-#include "qbuf_ref_hash_utils.h"
-#include "identifier.h"
+#include "mix_block.h"
+#include "runtime/mix_identifier.h"
+#include "misc/qbuf_ref_hash_utils.h"
 #include <stdlib.h> /* free() */
 
 /* -------------------------------------------------------------------------- */
 
-static void destroy_variable(void* data, void* nil) {
+static void __destroy_identifier(void* data, void* nil) {
     mix_identifier_delete((struct mix_identifier*)data);
 }
 
-static void hash_destroy_type(void* data, void* nil) {
+static void __destroy_type(void* data, void* nil) {
     mix_type_release((struct mix_type*)data);
 }
 
 void mix_block_delete(struct mix_block* b) {
     if (b) {
-        robin_hood_hash_destroy(&b->var_hash, NULL, destroy_variable);
-        robin_hood_hash_destroy(&b->type_hash, NULL, hash_destroy_type);
+        robin_hood_hash_destroy(&b->id_hash, NULL, __destroy_identifier);
+        robin_hood_hash_destroy(&b->type_hash, NULL, __destroy_type);
         free(b);
     }
 }
@@ -34,14 +34,14 @@ static const struct robin_hood_hash_operations g_type_hash_ops = {
     .hash = qbuf_ref_hash_func,
 };
 
-static const void* var_hash_getkey_func(const void* data) {
+static const void* id_hash_getkey_func(const void* data) {
     const struct mix_identifier* var = (const struct mix_identifier*)data;
     return qbuf_get_ref(&var->name);
 }
 
-static const struct robin_hood_hash_operations g_var_hash_ops = {
+static const struct robin_hood_hash_operations g_id_hash_ops = {
     .equal = qbuf_ref_equal_func,
-    .getkey = var_hash_getkey_func,
+    .getkey = id_hash_getkey_func,
     .hash = qbuf_ref_hash_func,
 };
 
@@ -59,12 +59,13 @@ struct mix_block* mix_block_new() {
         goto err1;
     }
 
-    err = robin_hood_hash_init(&b->var_hash, 20, ROBIN_HOOD_HASH_DEFAULT_MAX_LOAD_FACTOR,
-                               &g_var_hash_ops);
+    err = robin_hood_hash_init(&b->id_hash, 20, ROBIN_HOOD_HASH_DEFAULT_MAX_LOAD_FACTOR,
+                               &g_id_hash_ops);
     if (err) {
         goto err2;
     }
 
+    list_init(&b->node);
     return b;
 
 err2:
