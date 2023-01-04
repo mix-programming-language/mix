@@ -7,8 +7,8 @@
 
 <statement> ::= ";"
               | <expression> ";"
+              | <identifier_declaration_statement>
               | <assignment_statement>
-              | <variable_declaration_clause> ";"
               | <selection_statement>
               | <iteration_statement>
               | <jump_statement>
@@ -23,6 +23,8 @@
               | <trait_definition>
               | <trait_impl_definition>
 
+<identifier_declaration_statement> ::= "var" <variable_declaration_list> ";"
+
 <assignment_statement> ::= <variable> "=" <expression> ";"
                          | <variable> "=" <braced_initializer> ";"
                          | <variable> <assignment_operator> <expression> ";"
@@ -33,15 +35,13 @@
 
 <assignment_operator> ::= "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>="
 
-<variable_declaration_clause> ::= "var" <variable_declaration_with_optional_assignment_list>
+<variable_declaration_list> ::= <variable_declaration>
+                              | <variable_declaration_list> "," <variable_declaration>
 
-<variable_declaration_with_optional_assignment_list> ::= <variable_declaration_with_optional_assignment>
-                                                       | <variable_declaration_with_optional_assignment_list> "," <variable_declaration_with_optional_assignment>
-
-<variable_declaration_with_optional_assignment> ::= <identifier> ":" <type_specifier>
-                                                  | <identifier> ":" <type_specifier> "=" <braced_initializer>
-                                                  | <identifier> ":" <type_specifier> "=" <expression>
-                                                  | <identifier> "=" <expression>
+<variable_declaration> ::= <identifier> ":" <type_specifier>
+                         | <identifier> ":" <type_specifier> "=" <braced_initializer>
+                         | <identifier> ":" <type_specifier> "=" <expression>
+                         | <identifier> "=" <expression>
 
 <braced_initializer> ::= "{" "}"
                        | "{" <initializer_clause_list> "}"
@@ -217,9 +217,7 @@
                         | <type_specifier_list> "," <type_specifier>
 
 <optional_struct_member_list> ::= ""
-                                | <optional_struct_member_list> <struct_member>
-
-<struct_member> ::= <variable_declaration_clause> ";"
+                                | <optional_struct_member_list> <identifier_declaration_statement>
 
 <struct_impl_definition> ::= "impl" <identifier> <optional_generic_type_specifier> "{" <optional_member_function_list> "}"
 

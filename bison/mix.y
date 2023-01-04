@@ -280,8 +280,8 @@ optional_statement_list
 statement
 : ';'
 | expression ';'
+| identifier_declaration_statement
 | assignment_statement
-| variable_declaration_clause ';'
 | selection_statement
 | iteration_statement
 | jump_statement
@@ -295,6 +295,10 @@ statement
 | struct_impl_definition
 | trait_definition
 | trait_impl_definition
+;
+
+identifier_declaration_statement
+: BISON_KEYWORD_var variable_declaration_list ';'
 ;
 
 assignment_statement
@@ -319,16 +323,12 @@ assignment_operator
 : BISON_OP_ADD_ASSIGN | BISON_OP_SUB_ASSIGN | BISON_OP_MUL_ASSIGN | BISON_OP_DIV_ASSIGN | BISON_OP_MOD_ASSIGN | BISON_OP_AND_ASSIGN | BISON_OP_OR_ASSIGN | BISON_OP_XOR_ASSIGN | BISON_OP_RSHIFT_ASSIGN | BISON_OP_LSHIFT_ASSIGN
 ;
 
-variable_declaration_clause
-: BISON_KEYWORD_var variable_declaration_with_optional_assignment_list
+variable_declaration_list
+: variable_declaration
+| variable_declaration_list ',' variable_declaration
 ;
 
-variable_declaration_with_optional_assignment_list
-: variable_declaration_with_optional_assignment
-| variable_declaration_with_optional_assignment_list ',' variable_declaration_with_optional_assignment
-;
-
-variable_declaration_with_optional_assignment
+variable_declaration
 : BISON_SYM_IDENTIFIER ':' type_specifier
 | BISON_SYM_IDENTIFIER ':' type_specifier '=' braced_initializer
 | BISON_SYM_IDENTIFIER ':' type_specifier '=' expression
@@ -624,11 +624,7 @@ type_specifier_list
 
 optional_struct_member_list
 : %empty
-| optional_struct_member_list struct_member
-;
-
-struct_member
-: variable_declaration_clause ';'
+| optional_struct_member_list identifier_declaration_statement
 ;
 
 struct_impl_definition
