@@ -13,7 +13,6 @@
 #endif
 
 mix_retcode_t mix_parser_init(struct mix_parser* p, struct mix_context* ctx) {
-    p->ast_root = NULL;
     p->ctx = ctx;
     list_init(&p->block_stack);
 
@@ -35,8 +34,6 @@ void mix_parser_destroy(struct mix_parser* p) {
         list_del(&blk->node);
         mix_block_delete(blk);
     }
-
-    mix_ast_node_release(p->ast_root);
 }
 
 mix_retcode_t mix_parser_parse(struct mix_parser* p, const char* buf, uint32_t sz,

@@ -1,7 +1,6 @@
 #ifndef __MIX_PARSER_MIX_PARSER_H__
 #define __MIX_PARSER_MIX_PARSER_H__
 
-#include "mix_ast_node.h"
 #include "mix_block.h"
 #include "mix/retcode.h"
 #include "runtime/mix_context.h"
@@ -9,7 +8,6 @@
 
 struct mix_parser {
     struct mix_context* ctx;
-    struct mix_ast_node* ast_root;
     struct list_node block_stack;
 };
 
