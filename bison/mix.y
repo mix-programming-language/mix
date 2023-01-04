@@ -335,7 +335,7 @@ variable_declaration_list
 ;
 
 variable_declaration
-: BISON_SYM_IDENTIFIER ':' type_specifier
+: BISON_SYM_IDENTIFIER ':' type_specifier {}
 | BISON_SYM_IDENTIFIER ':' type_specifier '=' braced_initializer
 | BISON_SYM_IDENTIFIER ':' type_specifier '=' expression
 | BISON_SYM_IDENTIFIER '=' expression

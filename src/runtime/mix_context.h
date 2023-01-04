@@ -17,7 +17,7 @@ struct mix_context {
     struct robin_hood_hash type_hash;
 
     /* struct qbuf_ref* => struct mix_identifier* */
-    struct robin_hood_hash var_hash;
+    struct robin_hood_hash id_hash;
 
     /* available libs. name => vector of identifiers */
     struct robin_hood_hash libs;

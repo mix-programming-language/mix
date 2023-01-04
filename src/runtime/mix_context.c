@@ -61,14 +61,14 @@ static const struct robin_hood_hash_operations g_type_hash_ops = {
     .hash = qbuf_ref_hash_func,
 };
 
-static const void* var_hash_getkey_func(const void* data) {
+static const void* id_hash_getkey_func(const void* data) {
     const struct mix_identifier* var = (const struct mix_identifier*)data;
     return qbuf_get_ref(&var->name);
 }
 
-static const struct robin_hood_hash_operations g_var_hash_ops = {
+static const struct robin_hood_hash_operations g_id_hash_ops = {
     .equal = qbuf_ref_equal_func,
-    .getkey = var_hash_getkey_func,
+    .getkey = id_hash_getkey_func,
     .hash = qbuf_ref_hash_func,
 };
 
@@ -142,7 +142,7 @@ static void __destroy_type_func(void* data, void* nil) {
     mix_type_release((struct mix_type*)data);
 }
 
-static void __destroy_var_func(void* data, void* nil) {
+static void __destroy_id_func(void* data, void* nil) {
     mix_identifier_delete((struct mix_identifier*)data);
 }
 
@@ -170,8 +170,8 @@ struct mix_context* mix_context_new(struct logger* l) {
         goto err1;
     }
 
-    err = robin_hood_hash_init(&ctx->var_hash, 20, ROBIN_HOOD_HASH_DEFAULT_MAX_LOAD_FACTOR,
-                               &g_var_hash_ops);
+    err = robin_hood_hash_init(&ctx->id_hash, 20, ROBIN_HOOD_HASH_DEFAULT_MAX_LOAD_FACTOR,
+                               &g_id_hash_ops);
     if (err) {
         logger_error(ctx->logger, "init var hash failed.");
         goto err2;
@@ -198,7 +198,7 @@ struct mix_context* mix_context_new(struct logger* l) {
 err4:
     robin_hood_hash_destroy(&ctx->libs, NULL, NULL);
 err3:
-    robin_hood_hash_destroy(&ctx->var_hash, NULL, NULL);
+    robin_hood_hash_destroy(&ctx->id_hash, NULL, NULL);
 err2:
     robin_hood_hash_destroy(&ctx->type_hash, NULL, __destroy_type_func);
 err1:
@@ -214,7 +214,7 @@ static void __destroy_tov_func(void* data, void* nil) {
 void mix_context_delete(struct mix_context* ctx) {
     if (ctx) {
         vector_destroy(&ctx->runtime_stack, NULL, __destroy_tov_func);
-        robin_hood_hash_destroy(&ctx->var_hash, NULL, __destroy_var_func);
+        robin_hood_hash_destroy(&ctx->id_hash, NULL, __destroy_id_func);
         robin_hood_hash_destroy(&ctx->type_hash, NULL, __destroy_type_func);
         robin_hood_hash_destroy(&ctx->libs, NULL, __destroy_libs_func);
         free(ctx);
@@ -663,7 +663,7 @@ const char* mix_to_str(struct mix_context* ctx, int32_t idx, int32_t* len) {
 
 mix_retcode_t mix_get(struct mix_context* ctx, const char* name) {
     struct qbuf_ref qname = {.base = name, .size = strlen(name)};
-    struct mix_identifier* var = (struct mix_identifier*)robin_hood_hash_lookup(&ctx->var_hash, &qname);
+    struct mix_identifier* var = (struct mix_identifier*)robin_hood_hash_lookup(&ctx->id_hash, &qname);
     if (!var) {
         logger_error(ctx->logger, "cannot find variable [%s].", name);
         return MIX_RC_NOT_FOUND;
@@ -694,7 +694,7 @@ mix_retcode_t mix_set(struct mix_context* ctx, const char* name) {
 
     struct qbuf_ref qname = {.base = name, .size = strlen(name)};
     struct robin_hood_hash_insertion_res res =
-        robin_hood_hash_insert(&ctx->var_hash, &qname, NULL);
+        robin_hood_hash_insert(&ctx->id_hash, &qname, NULL);
     if (!res.inserted) {
         mix_identifier_delete(var);
         return MIX_RC_EXISTS;
