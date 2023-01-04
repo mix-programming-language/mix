@@ -258,6 +258,12 @@ static void yyerror(struct mix_parser* parser, struct mix_lex* lex, const char* 
 %type   <token> BISON_KEYWORD_virtual
 %type   <token> BISON_KEYWORD_while
 %type   <token> BISON_KEYWORD_yield
+
+%type   <type> type_specifier
+%type   <type> builtin_type_specifier
+%type   <type> user_type_specifier
+
+%type   <buf> nested_name_specifier
 %%
 
 block
@@ -699,18 +705,50 @@ trait_impl_definition
 /* -------------------------------------------------------------------------- */
 
 type_specifier
-: builtin_type_specifier
-| user_type_specifier
+: builtin_type_specifier {
+    $$ = $1;
+ }
+| user_type_specifier {
+    $$ = $1;
+ }
 ;
 
 builtin_type_specifier
-: BISON_KEYWORD_f32
-| BISON_KEYWORD_f64
-| BISON_KEYWORD_i8
-| BISON_KEYWORD_i16
-| BISON_KEYWORD_i32
-| BISON_KEYWORD_i64
-| BISON_KEYWORD_str
+: BISON_KEYWORD_f32 {
+    struct qbuf_ref tname = {.base = "f32", .size = 3};
+    $$ = mix_parser_lookup_type(parser, &tname);
+    mix_type_acquire($$);
+ }
+| BISON_KEYWORD_f64 {
+    struct qbuf_ref tname = {.base = "f64", .size = 3};
+    $$ = mix_parser_lookup_type(parser, &tname);
+    mix_type_acquire($$);
+ }
+| BISON_KEYWORD_i8 {
+    struct qbuf_ref tname = {.base = "i8", .size = 2};
+    $$ = mix_parser_lookup_type(parser, &tname);
+    mix_type_acquire($$);
+ }
+| BISON_KEYWORD_i16 {
+    struct qbuf_ref tname = {.base = "i16", .size = 3};
+    $$ = mix_parser_lookup_type(parser, &tname);
+    mix_type_acquire($$);
+ }
+| BISON_KEYWORD_i32 {
+    struct qbuf_ref tname = {.base = "i32", .size = 3};
+    $$ = mix_parser_lookup_type(parser, &tname);
+    mix_type_acquire($$);
+ }
+| BISON_KEYWORD_i64 {
+    struct qbuf_ref tname = {.base = "i64", .size = 3};
+    $$ = mix_parser_lookup_type(parser, &tname);
+    mix_type_acquire($$);
+ }
+| BISON_KEYWORD_str {
+    struct qbuf_ref tname = {.base = "str", .size = 3};
+    $$ = mix_parser_lookup_type(parser, &tname);
+    mix_type_acquire($$);
+ }
 ;
 
 user_type_specifier
@@ -729,7 +767,21 @@ user_type_specifier
 ;
 
 nested_name_specifier
-: BISON_SYM_IDENTIFIER optional_generic_type_specifier BISON_SYM_SCOPE_SPECIFIER
-| nested_name_specifier BISON_SYM_IDENTIFIER optional_generic_type_specifier BISON_SYM_SCOPE_SPECIFIER
+: BISON_SYM_IDENTIFIER optional_generic_type_specifier BISON_SYM_SCOPE_SPECIFIER {
+    $$ = malloc(sizeof(struct qbuf));
+    if (!$$) {
+        logger_error(logger, "allocate qbuf failed: out of memory.");
+        return YYerror;
+    }
+
+    qbuf_init($$);
+    qbuf_append($$, $1.s.base, $1.s.size);
+    qbuf_append_c($$, '/');
+ }
+| nested_name_specifier BISON_SYM_IDENTIFIER optional_generic_type_specifier BISON_SYM_SCOPE_SPECIFIER {
+    qbuf_append($1, $2.s.base, $2.s.size);
+    qbuf_append_c($1, '/');
+    $$ = $1;
+ }
 ;
 %%
