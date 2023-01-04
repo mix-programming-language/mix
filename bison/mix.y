@@ -45,6 +45,7 @@ static const int g_m2b_type[] = {
     BISON_KEYWORD_async,
     BISON_KEYWORD_await,
     BISON_KEYWORD_break,
+    BISON_KEYWORD_case,
     BISON_KEYWORD_cast,
     BISON_KEYWORD_continue,
     BISON_KEYWORD_do,
@@ -72,6 +73,7 @@ static const int g_m2b_type[] = {
     BISON_KEYWORD_self,
     BISON_KEYWORD_str,
     BISON_KEYWORD_struct,
+    BISON_KEYWORD_switch,
     BISON_KEYWORD_trait,
     BISON_KEYWORD_typedef,
     BISON_KEYWORD_typeof,
@@ -155,6 +157,7 @@ static void yyerror(struct mix_parser* parser, struct mix_lex* lex, const char* 
 %token BISON_KEYWORD_async
 %token BISON_KEYWORD_await
 %token BISON_KEYWORD_break
+%token BISON_KEYWORD_case
 %token BISON_KEYWORD_cast
 %token BISON_KEYWORD_continue
 %token BISON_KEYWORD_do
@@ -182,6 +185,7 @@ static void yyerror(struct mix_parser* parser, struct mix_lex* lex, const char* 
 %token BISON_KEYWORD_self
 %token BISON_KEYWORD_str
 %token BISON_KEYWORD_struct
+%token BISON_KEYWORD_switch
 %token BISON_KEYWORD_trait
 %token BISON_KEYWORD_typedef
 %token BISON_KEYWORD_typeof
@@ -224,6 +228,7 @@ static void yyerror(struct mix_parser* parser, struct mix_lex* lex, const char* 
 %type   <token> BISON_KEYWORD_async
 %type   <token> BISON_KEYWORD_await
 %type   <token> BISON_KEYWORD_break
+%type   <token> BISON_KEYWORD_case
 %type   <token> BISON_KEYWORD_cast
 %type   <token> BISON_KEYWORD_continue
 %type   <token> BISON_KEYWORD_do
@@ -251,6 +256,7 @@ static void yyerror(struct mix_parser* parser, struct mix_lex* lex, const char* 
 %type   <token> BISON_KEYWORD_self
 %type   <token> BISON_KEYWORD_str
 %type   <token> BISON_KEYWORD_struct
+%type   <token> BISON_KEYWORD_switch
 %type   <token> BISON_KEYWORD_trait
 %type   <token> BISON_KEYWORD_typedef
 %type   <token> BISON_KEYWORD_typeof
