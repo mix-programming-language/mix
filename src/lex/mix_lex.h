@@ -44,7 +44,7 @@ enum {
     MIX_TT_KEYWORD_async, /* reserved */
     MIX_TT_KEYWORD_await, /* reserved */
     MIX_TT_KEYWORD_break,
-    MIX_TT_KEYWORD_case,
+    MIX_TT_KEYWORD_case, /* reserved */
     MIX_TT_KEYWORD_cast,
     MIX_TT_KEYWORD_continue,
     MIX_TT_KEYWORD_do,
@@ -72,7 +72,7 @@ enum {
     MIX_TT_KEYWORD_self,
     MIX_TT_KEYWORD_str,
     MIX_TT_KEYWORD_struct,
-    MIX_TT_KEYWORD_switch,
+    MIX_TT_KEYWORD_switch, /* reserved */
     MIX_TT_KEYWORD_trait,
     MIX_TT_KEYWORD_typedef,
     MIX_TT_KEYWORD_typeof, /* reserved */
