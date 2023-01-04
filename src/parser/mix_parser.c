@@ -90,10 +90,24 @@ struct mix_identifier* mix_parser_decl_var(struct mix_parser* p, struct mix_type
         return NULL;
     }
 
-    var->tov.type = MIX_TOV_TYPE;
+    if (MIX_TYPE_IS_ATOMIC(type->value)) {
+        var->tov.t = type;
+        var->tov.type = MIX_TOV_ATOMIC_VALUE;
+    } else {
+        struct mix_shared_value* v = mix_shared_value_create();
+        if (!v) {
+            logger_error(p->ctx->logger, "allocate shared value failed.");
+            return NULL;
+        }
+        v->type = type;
+        mix_shared_value_acquire(v);
+        var->tov.v = v;
+        var->tov.type = MIX_TOV_SHARED_VALUE;
+    }
+
     mix_type_acquire(type);
-    var->tov.t = type;
     qbuf_assign(&var->name, vname->base, vname->size);
+
     return var;
 }
 
