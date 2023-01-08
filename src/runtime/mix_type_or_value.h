@@ -15,7 +15,7 @@ struct mix_type_or_value {
     union {
         struct {
             struct mix_type* t; /* used in TYPE and ATOMIC_VALUE */
-            union { /* all fields are 8 bytes */
+            union {
                 int64_t l;
                 double d;
                 mix_func_t f;

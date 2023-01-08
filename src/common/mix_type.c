@@ -14,6 +14,8 @@ static inline void __destroy_basic_type(struct mix_type* t) {
     qbuf_destroy(&t->name);
 }
 
+/* -------------------------------------------------------------------------- */
+
 static struct mix_type* __create_basic_type(mix_type_t type) {
     struct mix_type* t = (struct mix_type*)malloc(sizeof(struct mix_type));
     if (t) {
@@ -26,6 +28,8 @@ static void __release_basic_type(struct mix_type* t) {
     __destroy_basic_type(t);
     free(t);
 }
+
+/* -------------------------------------------------------------------------- */
 
 static struct mix_type* __create_func_type(mix_type_t type) {
     struct mix_func_type* t = (struct mix_func_type*)malloc(sizeof(struct mix_func_type));
@@ -52,6 +56,8 @@ static void __release_func_type(struct mix_type* t) {
     free(tt);
 }
 
+/* -------------------------------------------------------------------------- */
+
 static struct mix_type* __create_struct_type(mix_type_t type) {
     struct mix_struct_type* t = (struct mix_struct_type*)malloc(sizeof(struct mix_struct_type));
     if (!t) {
@@ -71,6 +77,8 @@ static void __release_struct_type(struct mix_type* t) {
     free(tt);
 }
 
+/* -------------------------------------------------------------------------- */
+
 static struct mix_type* __create_trait_type(mix_type_t type) {
     struct mix_trait_type* t = (struct mix_trait_type*)malloc(sizeof(struct mix_trait_type));
     if (!t) {
@@ -89,6 +97,8 @@ static void __release_trait_type(struct mix_type* t) {
     free(tt);
 }
 
+/* -------------------------------------------------------------------------- */
+
 static struct mix_type* __create_typedef_type(mix_type_t type) {
     struct mix_typedef_type* t = (struct mix_typedef_type*)malloc(sizeof(struct mix_typedef_type));
     if (!t) {
@@ -105,6 +115,8 @@ static void __release_typedef_type(struct mix_type* t) {
     __destroy_basic_type(t);
     free(tt);
 }
+
+/* -------------------------------------------------------------------------- */
 
 static const struct {
     struct mix_type* (*create_type)(mix_type_t);
